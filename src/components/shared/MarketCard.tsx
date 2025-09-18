@@ -2,6 +2,7 @@
 
 import { clsx } from 'clsx';
 import { TrendingUp, TrendingDown, Eye, Star, BarChart3 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import type { Market } from '../types';
 
 interface MarketCardProps {
@@ -19,6 +20,7 @@ export default function MarketCard({
   showWatchButton = true,
   showTradeButton = true 
 }: MarketCardProps) {
+  const router = useRouter();
   const isPositive = market.priceChange24h >= 0;
   
   const formatCurrency = (value: number) => {
@@ -35,8 +37,20 @@ export default function MarketCard({
     return `${(value * 100).toFixed(1)}%`;
   };
 
+  const handleCardClick = () => {
+    router.push(`/market/${market.id}`);
+  };
+
+  const handleWatchClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation when clicking watch button
+    onToggleWatch?.(market.id);
+  };
+
   return (
-    <div className="bg-gray-800 border border-gray-700 p-4 hover:bg-gray-750 transition-colors duration-200 group">
+    <div 
+      className="bg-gray-800 border border-gray-700 p-4 hover:bg-gray-750 transition-colors duration-200 group cursor-pointer hover:border-blue-500/50"
+      onClick={handleCardClick}
+    >
       {/* Header with mini chart area */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1 pr-4">
@@ -101,7 +115,7 @@ export default function MarketCard({
           </span>
           {showWatchButton && (
             <button
-              onClick={() => onToggleWatch?.(market.id)}
+              onClick={handleWatchClick}
               className={clsx(
                 'p-1 rounded transition-colors duration-200',
                 market.isWatched

@@ -67,7 +67,7 @@ export default function FilterPanel({
     filters.resolutionTime !== 'all';
 
   return (
-    <div className={clsx('bg-gray-800 rounded-lg border border-gray-700', className)}>
+    <div className={clsx('bg-gray-800 border border-gray-600 rounded-lg', className)}>
       {/* Header */}
       <div 
         className="flex items-center justify-between p-4 cursor-pointer"
@@ -77,7 +77,7 @@ export default function FilterPanel({
           <Filter size={16} className="text-gray-400" />
           <h3 className="font-semibold text-white">Filters</h3>
           {hasActiveFilters && (
-            <span className="bg-blue-600/20 text-blue-400 text-xs px-2 py-1 rounded-full">
+            <span className="bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
               Active
             </span>
           )}
@@ -93,18 +93,18 @@ export default function FilterPanel({
 
       {/* Expanded Content */}
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="px-4 pb-4 space-y-4 border-t border-gray-600 pt-4">
           {/* Categories */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Categories
             </label>
             <div className="relative">
               <button
                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-left"
+                className="w-full flex items-center justify-between px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-left hover:bg-gray-600"
               >
-                <span className="text-sm text-gray-900 dark:text-white">
+                <span className="text-sm">
                   {filters.categories.length === 0 
                     ? 'All Categories' 
                     : `${filters.categories.length} selected`
@@ -114,16 +114,16 @@ export default function FilterPanel({
               </button>
               
               {showCategoryDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg">
+                <div className="absolute z-10 w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-lg">
                   {categories.map((category) => (
-                    <label key={category} className="flex items-center px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer">
+                    <label key={category} className="flex items-center px-3 py-2 hover:bg-gray-600 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={filters.categories.includes(category)}
                         onChange={() => handleCategoryToggle(category)}
-                        className="mr-2 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="mr-2 rounded border-gray-500 bg-gray-600 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-900 dark:text-white">{category}</span>
+                      <span className="text-sm text-white">{category}</span>
                     </label>
                   ))}
                 </div>
@@ -133,7 +133,7 @@ export default function FilterPanel({
 
           {/* Volume Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Volume Range (24h)
             </label>
             <div className="flex items-center space-x-2">
@@ -142,22 +142,22 @@ export default function FilterPanel({
                 placeholder="Min"
                 value={filters.volumeRange[0]}
                 onChange={(e) => handleRangeChange('volumeRange', 0, Number(e.target.value))}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-gray-500">to</span>
+              <span className="text-gray-400">to</span>
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.volumeRange[1]}
                 onChange={(e) => handleRangeChange('volumeRange', 1, Number(e.target.value))}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           {/* Liquidity Range */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Liquidity Range
             </label>
             <div className="flex items-center space-x-2">
@@ -166,28 +166,28 @@ export default function FilterPanel({
                 placeholder="Min"
                 value={filters.liquidityRange[0]}
                 onChange={(e) => handleRangeChange('liquidityRange', 0, Number(e.target.value))}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <span className="text-gray-500">to</span>
+              <span className="text-gray-400">to</span>
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.liquidityRange[1]}
                 onChange={(e) => handleRangeChange('liquidityRange', 1, Number(e.target.value))}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+                className="flex-1 px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
           {/* Resolution Time */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Resolution Time
             </label>
             <select
               value={filters.resolutionTime}
               onChange={(e) => onFiltersChange({ ...filters, resolutionTime: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-sm"
+              className="w-full px-3 py-2 border border-gray-600 rounded-lg bg-gray-700 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Time</option>
               <option value="24h">Next 24 Hours</option>
@@ -202,7 +202,7 @@ export default function FilterPanel({
           <div className="flex space-x-2 pt-2">
             <button
               onClick={resetFilters}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+              className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors duration-200"
             >
               Reset
             </button>
