@@ -123,6 +123,7 @@ export default function DiscoverPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [chartDataCache, setChartDataCache] = useState<Record<string, number[]>>({});
   const [loadingCharts, setLoadingCharts] = useState<Record<string, boolean>>({});
+  const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   const fetchMarkets = async () => {
     try {
@@ -339,22 +340,25 @@ export default function DiscoverPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarHideStyles }} />
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 bg-[#0d1117] min-h-screen">
       {/* Filter Bar */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
           {/* Search Bar */}
           <div className="relative">
+            <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               type="text"
-              placeholder="Search markets to trade"
+              placeholder="Search markets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-80 px-4 py-2.5 bg-secondary border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:border-accent transition-colors duration-200"
+              className="w-80 pl-10 pr-4 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#f0f6fc] placeholder-[#7d8590] focus:outline-none focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] text-sm transition-all duration-200"
             />
           </div>
           
-          <button className="flex items-center space-x-2 px-6 py-3 border border-gray-600 text-gray-300 rounded-lg hover:bg-secondary hover:text-white hover:border-accent/50 shadow-md hover:shadow-lg transition-colors duration-200">
+          <button className="flex items-center space-x-2 px-4 py-2 border border-[#30363d] text-[#f0f6fc] bg-[#21262d] rounded-md hover:bg-[#30363d] hover:border-[#8b949e] text-sm font-medium transition-all duration-200">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
             </svg>
@@ -363,84 +367,99 @@ export default function DiscoverPage() {
         </div>
         
         {/* Rolling Carousel Strip */}
-        <div className="flex-1 mx-8 overflow-hidden">
-          <div className="relative h-10 bg-secondary border border-gray-600 rounded-lg overflow-hidden">
+        <div className="flex-1 mx-6 overflow-hidden">
+          <div className="relative h-8 bg-[#0d1117] border border-[#21262d] rounded-md overflow-hidden">
             {/* Rolling categories */}
-            <div className="flex animate-scroll absolute top-0 left-0 h-full items-center space-x-8 whitespace-nowrap">
+            <div className="flex animate-scroll absolute top-0 left-0 h-full items-center space-x-6 whitespace-nowrap">
               {/* Duplicate the array twice for seamless looping */}
               {[...tradingCategories, ...tradingCategories].map((category, index) => (
                 <div
                   key={`${category.id}-${index}`}
-                  className="flex items-center space-x-3 px-3 py-2 text-xs font-semibold text-gray-400 hover:text-white transition-colors duration-200 cursor-pointer group"
+                  className="flex items-center space-x-2 px-3 py-1 text-xs font-medium text-[#7d8590] hover:text-[#f0f6fc] transition-colors duration-200 cursor-pointer group"
                 >
                   <div 
-                    className="w-2 h-2 rounded-full opacity-70 group-hover:opacity-100 transition-opacity duration-200"
+                    className="w-1.5 h-1.5 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-200"
                     style={{ backgroundColor: category.color }}
                   ></div>
-                  <span className="tracking-wider">{category.name}</span>
+                  <span className="tracking-wide">{category.name}</span>
                 </div>
               ))}
             </div>
             
             {/* Matching fade gradients */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-secondary via-secondary/60 to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-secondary via-secondary/60 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0d1117] via-[#0d1117]/60 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0d1117] via-[#0d1117]/60 to-transparent z-10 pointer-events-none"></div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-6">
-          <button className="flex items-center space-x-2 px-6 py-3 bg-accent text-black font-semibold rounded-lg shadow-md hover:shadow-lg hover:bg-opacity-90 hover:scale-105 transition-all duration-200">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex items-center space-x-4">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[#238636] text-white font-medium rounded-md hover:bg-[#2ea043] text-sm transition-all duration-200">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
             </svg>
             <span>Trending</span>
-            <div className="w-2 h-2 bg-black rounded-full animate-pulse ml-1"></div>
+            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse ml-1"></div>
           </button>
-          <span className="text-gray-400">More</span>
+          <button className="text-[#7d8590] hover:text-[#f0f6fc] text-sm font-medium transition-colors duration-200">
+            More
+          </button>
         </div>
       </div>
 
 
 
       {/* Markets Table */}
-      <div className="bg-secondary rounded-lg border border-gray-600 overflow-hidden">
+      <div className="bg-[#0d1117] border border-[#21262d] rounded-md overflow-hidden">
         {/* Table Header */}
-        <div className="grid gap-6 px-6 py-4 bg-secondary border-b border-gray-600" style={{gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr'}}>
-          <div className="text-gray-400 font-medium uppercase text-sm tracking-wider">Market</div>
-          <div></div> {/* Empty space for chart column */}
-          <div className="text-gray-400 font-medium uppercase text-sm tracking-wider text-center">Price</div>
-          <div className="text-gray-400 font-medium uppercase text-sm tracking-wider text-center">Liquidity</div>
-          <div className="text-gray-400 font-medium uppercase text-sm tracking-wider text-center">Opened</div>
-          <div className="text-gray-400 font-medium uppercase text-sm tracking-wider text-center">Expires</div>
+        <div className="grid gap-4 px-4 py-3 bg-[#161b22] border-b border-[#21262d]" style={{gridTemplateColumns: '2.5fr 1fr 1.2fr 1fr 1fr 1fr'}}>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 019 17v-5.586L4.293 6.707A1 1 0 014 6V4z" clipRule="evenodd" />
+            </svg>
+            Name
+          </div>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Chart</div>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Price</div>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Liquidity</div>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Opened</div>
+          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Expires</div>
         </div>
 
         {/* Table Body */}
         <div>
           {loading ? (
-            <div className="text-center py-12">
-              <RefreshCw size={48} className="mx-auto animate-spin text-gray-500 mb-4" />
-              <h3 className="text-lg font-medium text-white mb-2">Loading markets...</h3>
-              <p className="text-gray-400">Fetching live data from Polymarket</p>
+            <div className="text-center py-16">
+              <RefreshCw size={32} className="mx-auto animate-spin text-[#7d8590] mb-4" />
+              <h3 className="text-base font-medium text-[#f0f6fc] mb-2">Loading markets...</h3>
+              <p className="text-[#7d8590] text-sm">Fetching live data from Polymarket</p>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <div className="text-red-400 mb-4">❌</div>
-              <h3 className="text-lg font-medium text-white mb-2">Error loading markets</h3>
-              <p className="text-gray-400 mb-4">{error}</p>
+            <div className="text-center py-16">
+              <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center rounded-full bg-[#da3633]/10">
+                <svg className="w-6 h-6 text-[#f85149]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-base font-medium text-[#f0f6fc] mb-2">Error loading markets</h3>
+              <p className="text-[#7d8590] text-sm mb-4">{error}</p>
               <button 
                 onClick={fetchMarkets}
-                className="px-4 py-2 bg-accent text-black font-medium rounded-md hover:opacity-90 transition-opacity"
+                className="px-4 py-2 bg-[#238636] text-white font-medium rounded-md hover:bg-[#2ea043] text-sm transition-colors duration-150"
               >
                 Try Again
               </button>
             </div>
           ) : filteredMarkets.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-500 mb-4">📊</div>
-              <h3 className="text-lg font-medium text-white mb-2">
+            <div className="text-center py-16">
+              <div className="w-12 h-12 mx-auto mb-4 flex items-center justify-center rounded-full bg-[#7d8590]/10">
+                <svg className="w-6 h-6 text-[#7d8590]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-base font-medium text-[#f0f6fc] mb-2">
                 {searchQuery ? 'No markets match your search' : 'No markets found'}
               </h3>
-              <p className="text-gray-400">
+              <p className="text-[#7d8590] text-sm">
                 {searchQuery ? 'Try a different search term' : 'Try refreshing or check back later'}
               </p>
             </div>
@@ -458,17 +477,19 @@ export default function DiscoverPage() {
               return (
               <div 
                 key={market.id}
-                className="grid gap-6 px-6 py-4 border-b border-gray-700 last:border-b-0 hover:bg-gray-800/40 transition-colors duration-200 cursor-pointer"
-                style={{gridTemplateColumns: '2fr 1fr 1.5fr 1fr 1fr 1fr'}}
+                className="grid gap-4 px-4 py-3 border-b border-[#21262d] last:border-b-0 hover:bg-[#161b22] transition-colors duration-150 cursor-pointer group"
+                style={{gridTemplateColumns: '2.5fr 1fr 1.2fr 1fr 1fr 1fr'}}
+                onMouseEnter={() => setHoveredRow(market.id)}
+                onMouseLeave={() => setHoveredRow(null)}
               >
                 {/* Market Info */}
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-700 rounded-lg flex items-center justify-center flex-shrink-0 text-lg">
+                  <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 text-base">
                     {typeof getMarketIcon(market) === 'string' && getMarketIcon(market).startsWith('http') ? (
                       <img 
                         src={getMarketIcon(market)}
                         alt={market.name}
-                        className="w-8 h-8 object-cover rounded"
+                        className="w-6 h-6 object-cover rounded"
                         onError={(e) => {
                           const target = e.currentTarget;
                           target.style.display = 'none';
@@ -479,69 +500,71 @@ export default function DiscoverPage() {
                         }}
                       />
                     ) : (
-                      <span>{getMarketIcon(market)}</span>
+                      <span className="text-[#7d8590] group-hover:text-[#58a6ff] transition-colors duration-150">{getMarketIcon(market)}</span>
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-white font-medium text-sm leading-tight line-clamp-2">
+                    <div className="text-[#58a6ff] font-medium text-sm leading-tight line-clamp-2 group-hover:underline">
                       {market.name}
+                    </div>
+                    <div className="text-[#7d8590] text-xs mt-0.5 truncate">
+                      {market.category || 'Prediction Market'}
                     </div>
                   </div>
                 </div>
                 
                 {/* Mini Chart */}
                 <div className="flex items-center justify-center">
-                  <MiniChart 
-                    data={cachedChartData} 
-                    isPositive={isPositive} 
-                    isLoading={isChartLoading}
-                  />
+                  <div className="opacity-80 group-hover:opacity-100 transition-opacity duration-150">
+                    <MiniChart 
+                      data={cachedChartData} 
+                      isPositive={isPositive} 
+                      isLoading={isChartLoading}
+                    />
+                  </div>
                 </div>
                 
                 {/* Price */}
                 <div className="flex items-center justify-center">
-                  <div className="relative w-32 h-10 bg-gray-900/80 rounded-xl border border-gray-600/50 overflow-hidden shadow-lg group">
+                  <div className="relative w-28 h-8 bg-[#21262d] rounded-lg border border-[#30363d] overflow-hidden">
                     {/* YES Button */}
-                    <div className="absolute left-0 top-0 w-16 h-full group-hover:w-0 transition-all duration-300 ease-out z-20 hover:!w-full hover:z-30 bg-gradient-to-br from-green-400 via-green-500 to-green-600 hover:from-green-300 hover:via-green-400 hover:to-green-500 hover:shadow-[0_0_20px_rgba(34,197,94,0.6)] cursor-pointer overflow-hidden shadow-[0_0_8px_rgba(34,197,94,0.4)]">
-                      <div className="relative w-full h-full flex flex-col items-center justify-center text-white font-bold text-xs">
-                        <span className="opacity-100 text-[10px] font-semibold tracking-wide drop-shadow-lg">YES</span>
-                        <span className="text-sm font-black drop-shadow-xl">{formatPrice(market.currentPrice)}</span>
+                    <div className="absolute left-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[#238636] hover:bg-[#2ea043] cursor-pointer overflow-hidden group hover:shadow-md">
+                      <div className="relative w-full h-full flex flex-col items-center justify-center text-white">
+                        <span className="text-[9px] font-medium tracking-wider opacity-90 group-hover:opacity-100 transition-opacity duration-200">YES</span>
+                        <span className="text-xs font-bold mt-0.5 group-hover:text-sm transition-all duration-200">{formatPrice(market.currentPrice)}</span>
                       </div>
                     </div>
                     
                     {/* NO Button */}
-                    <div className="absolute right-0 top-0 w-16 h-full group-hover:w-0 transition-all duration-300 ease-out z-20 hover:!w-full hover:z-30 bg-gradient-to-br from-red-500 via-red-600 to-red-700 hover:from-red-400 hover:via-red-500 hover:to-red-600 hover:shadow-[0_0_20px_rgba(239,68,68,0.6)] cursor-pointer overflow-hidden shadow-[0_0_8px_rgba(239,68,68,0.4)]">
-                      <div className="relative w-full h-full flex flex-col items-center justify-center text-white font-bold text-xs">
-                        <span className="opacity-100 text-[10px] font-semibold tracking-wide drop-shadow-lg">NO</span>
-                        <span className="text-sm font-black drop-shadow-xl">{formatPrice(1 - market.currentPrice)}</span>
+                    <div className="absolute right-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[#da3633] hover:bg-[#f85149] cursor-pointer overflow-hidden group hover:shadow-md">
+                      <div className="relative w-full h-full flex flex-col items-center justify-center text-white">
+                        <span className="text-[9px] font-medium tracking-wider opacity-90 group-hover:opacity-100 transition-opacity duration-200">NO</span>
+                        <span className="text-xs font-bold mt-0.5 group-hover:text-sm transition-all duration-200">{formatPrice(1 - market.currentPrice)}</span>
                       </div>
                     </div>
                     
-                    {/* Background Fill */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-red-500/20"></div>
-                    
-                    {/* Divider line */}
-                    <div className="absolute left-1/2 top-1 bottom-1 w-px bg-gradient-to-b from-transparent via-gray-500/30 to-transparent transform -translate-x-0.5 z-10"></div>
+                    {/* Subtle divider */}
+                    <div className="absolute left-1/2 top-1 bottom-1 w-px bg-[#30363d] transform -translate-x-0.5 z-10"></div>
                   </div>
                 </div>
                 
                 {/* Volume */}
                 <div className="flex items-center justify-center">
-                  <span className="text-gray-300 text-sm font-medium">
+                  <span className="text-[#f0f6fc] text-sm font-medium">
                     {formatCurrency(market.liquidity)}
                   </span>
                 </div>
                 
                 {/* Opened */}
                 <div className="flex items-center justify-center">
-                  <span className="text-gray-300 text-sm">
-                    5 Oct, 2025
+                  <span className="text-[#7d8590] text-sm font-mono">
+                    Oct 5, 2025
                   </span>
                 </div>
                 
                 {/* Expires */}
                 <div className="flex items-center justify-center">
-                  <span className="text-gray-300 text-sm">
+                  <span className="text-[#7d8590] text-sm font-mono">
                     {formatDate(market.endDate)}
                   </span>
                 </div>

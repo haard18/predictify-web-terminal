@@ -14,7 +14,7 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
   const [activeTab, setActiveTab] = useState('Discover');
 
   return (
-    <header className="bg-primary border-b border-secondary fixed top-0 left-0 right-0 z-50">
+    <header className="bg-[#010409] border-b border-[#21262d] fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between px-6 py-3">
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center space-x-8">
@@ -27,7 +27,7 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
                 className="w-10 h-10 object-contain"
               />
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Predictify</h1>
+            <h1 className="text-xl font-bold text-[#f0f6fc] tracking-tight">Predictify</h1>
           </div>
 
           {/* Navigation Tabs */}
@@ -39,8 +39,8 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
                 className={clsx(
                   'text-base font-medium transition-colors duration-200',
                   activeTab === tab
-                    ? 'text-white'
-                    : 'text-gray-400 hover:text-white'
+                    ? 'text-[#f0f6fc] border-b-2 border-[#fd7e14] pb-3'
+                    : 'text-[#7d8590] hover:text-[#f0f6fc] pb-3'
                 )}
               >
                 {tab}
@@ -60,19 +60,19 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
         
 
        {/* Portfolio / Wallet Split Button */}
-<div className="flex items-center gap-4 px-4 py-2 bg-[#1e1e1e] border border-[#333] rounded-xl text-white transition-all duration-200">
+<div className="flex items-center gap-4 px-4 py-2 bg-[#21262d] border border-[#30363d] rounded-lg text-[#f0f6fc] transition-all duration-200">
   {/* Wallet Section */}
   <button
     onClick={() => console.log("Wallet clicked")}
-    className="flex items-center gap-2 hover:bg-[#2a2a2a] px-2 py-1 rounded-lg transition-all duration-200"
+    className="flex items-center gap-2 hover:bg-[#30363d] px-2 py-1 rounded-md transition-all duration-200"
   >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
       strokeWidth={2}
-      stroke="white"
-      className="w-6 h-6"
+      stroke="currentColor"
+      className="w-5 h-5 text-[#7d8590]"
     >
       <path
         strokeLinecap="round"
@@ -85,16 +85,16 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
         d="M16 12h2a1 1 0 000-2h-2a1 1 0 000 2z"
       />
     </svg>
-    <span className="text-sm font-mono font-medium">$1000</span>
+    <span className="text-sm font-mono font-semibold">$1000</span>
   </button>
 
   {/* Divider */}
-  <div className="h-5 w-px bg-[#444]" />
+  <div className="h-5 w-px bg-[#30363d]" />
 
   {/* Portfolio Section */}
   <button
     onClick={() => console.log("Portfolio clicked")}
-    className="hover:bg-[#2a2a2a] px-2 py-1 rounded-lg transition-all duration-200 text-sm font-mono font-medium"
+    className="hover:bg-[#30363d] px-2 py-1 rounded-md transition-all duration-200 text-sm font-medium"
   >
     Portfolio
   </button>
@@ -105,8 +105,8 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
         
 
           {/* User Profile */}
-          <button className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center hover:bg-gray-500 transition-colors duration-200 border border-gray-500">
-            <User size={18} className="text-gray-300" />
+          <button className="w-9 h-9 bg-[#21262d] rounded-full flex items-center justify-center hover:bg-[#30363d] transition-colors duration-200 border border-[#30363d]">
+            <User size={18} className="text-[#7d8590]" />
           </button>
         </div>
       </div>
