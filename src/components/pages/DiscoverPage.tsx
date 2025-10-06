@@ -282,7 +282,7 @@ export default function DiscoverPage() {
           <path
             d={pathData}
             fill="none"
-            stroke={isPositive ? "#22c55e" : "#ef4444"}
+            stroke={isPositive ? 'var(--yes-color)' : 'var(--no-color)'}
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -299,7 +299,7 @@ export default function DiscoverPage() {
                 cx={x}
                 cy={y}
                 r="1.2"
-                fill={isPositive ? "#22c55e" : "#ef4444"}
+                fill={isPositive ? 'var(--yes-color)' : 'var(--no-color)'}
                 className="opacity-60"
               />
             );
@@ -308,8 +308,8 @@ export default function DiscoverPage() {
           {/* Gradient fill under line */}
           <defs>
             <linearGradient id={`gradient-${isPositive ? 'green' : 'red'}`} x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity="0.3"/>
-              <stop offset="100%" stopColor={isPositive ? "#22c55e" : "#ef4444"} stopOpacity="0"/>
+              <stop offset="0%" stopColor={isPositive ? 'var(--yes-color)' : 'var(--no-color)'} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={isPositive ? 'var(--yes-color)' : 'var(--no-color)'} stopOpacity="0"/>
             </linearGradient>
           </defs>
           <path
@@ -477,7 +477,7 @@ export default function DiscoverPage() {
         onToggleSidebar={handleToggleSidebar}
         sidebarCollapsed={sidebarCollapsed}
       />
-      <div className="px-6 py-6 bg-[#0d1117] min-h-screen pt-20">
+  <div className="px-6 py-6 bg-primary min-h-screen pt-20 font-inconsolata text-primary">
       {/* Filter Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -491,7 +491,7 @@ export default function DiscoverPage() {
               placeholder="Search markets..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-80 pl-10 pr-4 py-2 bg-[#0d1117] border border-[#30363d] rounded-md text-[#f0f6fc] placeholder-[#7d8590] focus:outline-none focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] text-sm transition-all duration-200"
+              className="w-80 pl-10 pr-4 py-2 bg-primary border border-primary rounded-md text-primary placeholder:text-secondary focus:outline-none focus:border-[#58a6ff] focus:ring-1 focus:ring-[#58a6ff] text-sm transition-all duration-200"
             />
           </div>
           
@@ -499,15 +499,15 @@ export default function DiscoverPage() {
             onClick={() => setIsFilterOpen(true)}
             className={`flex items-center space-x-2 px-4 py-2 border rounded-md text-sm font-medium transition-all duration-200 ${
               getActiveFilterCount() > 0 
-                ? 'border-[#58a6ff] text-[#58a6ff] bg-[#0d1117] hover:bg-[#161b22]'
-                : 'border-[#30363d] text-[#f0f6fc] bg-[#21262d] hover:bg-[#30363d] hover:border-[#8b949e]'
+                ? 'border-[#58a6ff] text-[#58a6ff] bg-primary hover:bg-[color:var(--bg-secondary)]'
+                : 'border-primary text-primary bg-[color:var(--bg-secondary)] hover:bg-[color:var(--bg-tertiary)] hover:border-[#8b949e]'
             }`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
             </svg>
             <span>Filter</span>
-            {getActiveFilterCount() > 0 && (
+              {getActiveFilterCount() > 0 && (
               <span className="ml-1 px-1.5 py-0.5 bg-[#58a6ff] text-white text-xs rounded-full min-w-[18px] text-center">
                 {getActiveFilterCount()}
               </span>
@@ -517,14 +517,14 @@ export default function DiscoverPage() {
         
         {/* Rolling Carousel Strip */}
         <div className="flex-1 mx-6 overflow-hidden">
-          <div className="relative h-8 bg-[#0d1117] border border-[#21262d] rounded-md overflow-hidden">
+          <div className="relative h-8 bg-primary border border-[color:var(--bg-secondary)] rounded-md overflow-hidden">
             {/* Rolling categories */}
             <div className="flex animate-scroll absolute top-0 left-0 h-full items-center space-x-6 whitespace-nowrap">
               {/* Duplicate the array twice for seamless looping */}
               {[...tradingCategories, ...tradingCategories].map((category, index) => (
                 <div
                   key={`${category.id}-${index}`}
-                  className="flex items-center space-x-2 px-3 py-1 text-xs font-medium text-[#7d8590] hover:text-[#f0f6fc] transition-colors duration-200 cursor-pointer group"
+                  className="flex items-center space-x-2 px-3 py-1 text-xs font-medium text-secondary hover:text-primary transition-colors duration-200 cursor-pointer group"
                 >
                   <div 
                     className="w-1.5 h-1.5 rounded-full opacity-60 group-hover:opacity-100 transition-opacity duration-200"
@@ -536,20 +536,20 @@ export default function DiscoverPage() {
             </div>
             
             {/* Matching fade gradients */}
-            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[#0d1117] via-[#0d1117]/60 to-transparent z-10 pointer-events-none"></div>
-            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0d1117] via-[#0d1117]/60 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-[color:var(--bg-primary)] via-[color:var(--bg-primary)]/60 to-transparent z-10 pointer-events-none"></div>
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[color:var(--bg-primary)] via-[color:var(--bg-primary)]/60 to-transparent z-10 pointer-events-none"></div>
           </div>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-[#238636] text-white font-medium rounded-md hover:bg-[#2ea043] text-sm transition-all duration-200">
+          <div className="flex items-center space-x-4">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-[color:var(--accent-green)] text-white font-medium rounded-md hover:bg-[#2ea043] text-sm transition-all duration-200">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
             </svg>
             <span>Trending</span>
             <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse ml-1"></div>
           </button>
-          <button className="text-[#7d8590] hover:text-[#f0f6fc] text-sm font-medium transition-colors duration-200">
+          <button className="text-secondary hover:text-primary text-sm font-medium transition-colors duration-200">
             More
           </button>
         </div>
@@ -558,19 +558,19 @@ export default function DiscoverPage() {
 
 
       {/* Markets Table */}
-      <div className="bg-[#0d1117] border border-[#21262d] rounded-md overflow-hidden">
+  <div className="bg-primary border border-[color:var(--bg-secondary)] rounded-md overflow-hidden">
         {/* Table Header */}
-        <div className="grid gap-4 px-4 py-3 bg-[#161b22] border-b border-[#21262d]" style={{gridTemplateColumns: '2.5fr 1fr 1.2fr 1fr 1fr 1fr'}}>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide flex items-center">
+        <div className="grid gap-4 px-4 py-3 bg-[color:var(--bg-tertiary)] border-b border-[color:var(--bg-secondary)]" style={{gridTemplateColumns: '2.5fr 1fr 1.2fr 1fr 1fr 1fr'}}>
+          <div className="text-secondary font-semibold text-xs tracking-wide flex items-center">
             <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 019 17v-5.586L4.293 6.707A1 1 0 014 6V4z" clipRule="evenodd" />
             </svg>
             Name
           </div>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Chart</div>
+          <div className="text-secondary font-semibold text-xs tracking-wide text-center">Chart</div>
           <button 
             onClick={() => handleSort('price')}
-            className="text-[#7d8590] hover:text-[#f0f6fc] font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
+            className="text-secondary hover:text-primary font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
           >
             <span>Price</span>
             <div className="flex flex-col ml-1">
@@ -578,7 +578,7 @@ export default function DiscoverPage() {
                 className={`w-4 h-4 transition-colors duration-150 ${
                   sortBy === 'price' && sortOrder === 'desc' 
                     ? 'text-[#58a6ff]' 
-                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                    : 'text-secondary group-hover:text-primary'
                 }`} 
                 fill="currentColor" 
                 viewBox="0 0 20 20"
@@ -589,7 +589,7 @@ export default function DiscoverPage() {
                 className={`w-4 h-4 -mt-1.5 transition-colors duration-150 ${
                   sortBy === 'price' && sortOrder === 'asc' 
                     ? 'text-[#58a6ff]' 
-                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                    : 'text-secondary group-hover:text-primary'
                 }`} 
                 fill="currentColor" 
                 viewBox="0 0 20 20"
@@ -600,7 +600,7 @@ export default function DiscoverPage() {
           </button>
           <button 
             onClick={() => handleSort('liquidity')}
-            className="text-[#7d8590] hover:text-[#f0f6fc] font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
+            className="text-secondary hover:text-primary font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
           >
             <span>Liquidity</span>
             <div className="flex flex-col ml-1">
@@ -608,7 +608,7 @@ export default function DiscoverPage() {
                 className={`w-4 h-4 transition-colors duration-150 ${
                   sortBy === 'liquidity' && sortOrder === 'desc' 
                     ? 'text-[#58a6ff]' 
-                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                    : 'text-secondary group-hover:text-primary'
                 }`} 
                 fill="currentColor" 
                 viewBox="0 0 20 20"
@@ -619,7 +619,7 @@ export default function DiscoverPage() {
                 className={`w-4 h-4 -mt-1.5 transition-colors duration-150 ${
                   sortBy === 'liquidity' && sortOrder === 'asc' 
                     ? 'text-[#58a6ff]' 
-                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                    : 'text-secondary group-hover:text-primary'
                 }`} 
                 fill="currentColor" 
                 viewBox="0 0 20 20"
@@ -628,8 +628,8 @@ export default function DiscoverPage() {
               </svg>
             </div>
           </button>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Opened</div>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Expires</div>
+          <div className="text-secondary font-semibold text-xs tracking-wide text-center">Opened</div>
+          <div className="text-secondary font-semibold text-xs tracking-wide text-center">Expires</div>
         </div>
 
         {/* Table Body */}
@@ -733,9 +733,9 @@ export default function DiscoverPage() {
                 
                 {/* Price */}
                 <div className="flex items-center justify-center">
-                  <div className="relative w-28 h-8 bg-[#21262d] rounded-lg border border-[#30363d] overflow-hidden">
+                  <div className="relative w-28 h-8 bg-[color:var(--bg-tertiary)] rounded-lg border border-[color:var(--border-primary)] overflow-hidden">
                     {/* YES Button */}
-                    <div className="absolute left-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[#238636] hover:bg-[#2ea043] cursor-pointer overflow-hidden group hover:shadow-md">
+                    <div className="absolute left-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[color:var(--accent-green)] hover:bg-[#2ea043] cursor-pointer overflow-hidden group hover:shadow-md">
                       <div className="relative w-full h-full flex flex-col items-center justify-center text-white">
                         <span className="text-[9px] font-medium tracking-wider opacity-90 group-hover:opacity-100 transition-opacity duration-200">YES</span>
                         <span className="text-xs font-bold mt-0.5 group-hover:text-sm transition-all duration-200">{formatPrice(market.currentPrice)}</span>
@@ -743,7 +743,7 @@ export default function DiscoverPage() {
                     </div>
                     
                     {/* NO Button */}
-                    <div className="absolute right-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[#da3633] hover:bg-[#f85149] cursor-pointer overflow-hidden group hover:shadow-md">
+                    <div className="absolute right-0 top-0 w-14 h-full transition-all duration-400 ease-out hover:w-full hover:z-30 bg-[color:var(--no-color)] hover:bg-[#f85149] cursor-pointer overflow-hidden group hover:shadow-md">
                       <div className="relative w-full h-full flex flex-col items-center justify-center text-white">
                         <span className="text-[9px] font-medium tracking-wider opacity-90 group-hover:opacity-100 transition-opacity duration-200">NO</span>
                         <span className="text-xs font-bold mt-0.5 group-hover:text-sm transition-all duration-200">{formatPrice(1 - market.currentPrice)}</span>
@@ -751,7 +751,7 @@ export default function DiscoverPage() {
                     </div>
                     
                     {/* Subtle divider */}
-                    <div className="absolute left-1/2 top-1 bottom-1 w-px bg-[#30363d] transform -translate-x-0.5 z-10"></div>
+                    <div className="absolute left-1/2 top-1 bottom-1 w-px bg-[color:var(--border-primary)] transform -translate-x-0.5 z-10"></div>
                   </div>
                 </div>
                 
