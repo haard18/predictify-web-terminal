@@ -21,7 +21,6 @@ export interface FilterOptions {
     max: number;
   };
   searchKeywords: string[];
-  excludeKeywords: string[];
   sortBy: 'volume' | 'liquidity' | 'newest' | 'ending_soonest';
   showActiveOnly: boolean;
 }
@@ -122,7 +121,6 @@ const categories = [
 export default function FilterModal({ isOpen, onClose, onApplyFilters, currentFilters }: FilterModalProps) {
   const [filters, setFilters] = useState<FilterOptions>(currentFilters);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [excludeKeyword, setExcludeKeyword] = useState('');
 
   useEffect(() => {
     setFilters(currentFilters);
@@ -149,27 +147,10 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, currentFi
     }
   };
 
-  const handleAddExcludeKeyword = () => {
-    if (excludeKeyword.trim() && !filters.excludeKeywords.includes(excludeKeyword.trim())) {
-      setFilters(prev => ({
-        ...prev,
-        excludeKeywords: [...prev.excludeKeywords, excludeKeyword.trim()]
-      }));
-      setExcludeKeyword('');
-    }
-  };
-
   const handleRemoveSearchKeyword = (keyword: string) => {
     setFilters(prev => ({
       ...prev,
       searchKeywords: prev.searchKeywords.filter(k => k !== keyword)
-    }));
-  };
-
-  const handleRemoveExcludeKeyword = (keyword: string) => {
-    setFilters(prev => ({
-      ...prev,
-      excludeKeywords: prev.excludeKeywords.filter(k => k !== keyword)
     }));
   };
 
@@ -179,7 +160,6 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, currentFi
       priceRange: { min: 0, max: 100 },
       liquidityRange: { min: 0, max: 10000000 },
       searchKeywords: [],
-      excludeKeywords: [],
       sortBy: 'volume',
       showActiveOnly: true
     });
@@ -378,46 +358,6 @@ export default function FilterModal({ isOpen, onClose, onApplyFilters, currentFi
                   {keyword}
                   <button
                     onClick={() => handleRemoveSearchKeyword(keyword)}
-                    className="ml-2 text-[#7d8590] hover:text-[#f85149] transition-colors duration-150 hover:scale-110"
-                  >
-                    <X size={12} />
-                  </button>
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Exclude Keywords */}
-          <div className="p-6 border-t border-[#30363d] bg-gradient-to-r from-[#0d1117]/30 to-[#161b22]/30">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="w-1 h-4 bg-[#f85149] rounded-full"></div>
-              <h3 className="text-sm font-bold text-[#f0f6fc] uppercase tracking-wider">Exclude Keywords</h3>
-            </div>
-            <div className="flex items-center space-x-3 mb-3">
-              <input
-                type="text"
-                placeholder="Enter keywords to exclude..."
-                value={excludeKeyword}
-                onChange={(e) => setExcludeKeyword(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddExcludeKeyword()}
-                className="flex-1 px-4 py-2.5 bg-[#0d1117] border border-[#30363d] rounded-lg text-[#f0f6fc] text-sm focus:outline-none focus:border-[#f85149] focus:ring-2 focus:ring-[#f85149]/20 transition-all duration-200 hover:border-[#7d8590]"
-              />
-              <button
-                onClick={handleAddExcludeKeyword}
-                className="px-4 py-2.5 bg-gradient-to-r from-[#da3633] to-[#f85149] text-white text-sm font-semibold rounded-lg hover:from-[#f85149] hover:to-[#da3633] transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {filters.excludeKeywords.map((keyword) => (
-                <span
-                  key={keyword}
-                  className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-[#21262d] to-[#30363d] border border-[#f85149]/30 rounded-lg text-xs text-[#f0f6fc] font-medium shadow-sm"
-                >
-                  {keyword}
-                  <button
-                    onClick={() => handleRemoveExcludeKeyword(keyword)}
                     className="ml-2 text-[#7d8590] hover:text-[#f85149] transition-colors duration-150 hover:scale-110"
                   >
                     <X size={12} />

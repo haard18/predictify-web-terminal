@@ -132,7 +132,6 @@ export default function DiscoverPage() {
     priceRange: { min: 0, max: 100 },
     liquidityRange: { min: 0, max: 10000000 },
     searchKeywords: [],
-    excludeKeywords: [],
     sortBy: 'volume',
     showActiveOnly: true
   });
@@ -203,7 +202,6 @@ export default function DiscoverPage() {
     let count = 0;
     if (activeFilters.categories.length > 0) count++;
     if (activeFilters.searchKeywords.length > 0) count++;
-    if (activeFilters.excludeKeywords.length > 0) count++;
     if (activeFilters.priceRange.min > 0 || activeFilters.priceRange.max < 100) count++;
     if (activeFilters.liquidityRange.min > 0 || activeFilters.liquidityRange.max < 10000000) count++;
     if (!activeFilters.showActiveOnly) count++;
@@ -442,15 +440,6 @@ export default function DiscoverPage() {
       if (!hasAllKeywords) return false;
     }
 
-    // Exclude keywords filter
-    if (activeFilters.excludeKeywords.length > 0) {
-      const searchableText = `${market.name} ${market.description} ${market.category} ${market.tags?.join(' ')}`.toLowerCase();
-      const hasExcludedKeywords = activeFilters.excludeKeywords.some(keyword => 
-        searchableText.includes(keyword.toLowerCase())
-      );
-      if (hasExcludedKeywords) return false;
-    }
-    
     return matchesSearch;
   }).sort((a, b) => {
     // Apply sorting if a sort column is selected
