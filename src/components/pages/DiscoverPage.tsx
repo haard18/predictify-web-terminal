@@ -5,6 +5,7 @@ import { RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { polymarketAPI, PolymarketMarket } from '@/lib/polymarket-api';
 import FilterModal, { FilterOptions } from '@/components/shared/FilterModal';
+import TopNav from '@/components/TopNav';
 
 interface PricePoint {
   timestamp: number;
@@ -136,6 +137,11 @@ export default function DiscoverPage() {
     showActiveOnly: true
   });
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   const fetchMarkets = async () => {
     try {
@@ -467,7 +473,11 @@ export default function DiscoverPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: scrollbarHideStyles }} />
-      <div className="px-6 py-6 bg-[#0d1117] min-h-screen">
+      <TopNav 
+        onToggleSidebar={handleToggleSidebar}
+        sidebarCollapsed={sidebarCollapsed}
+      />
+      <div className="px-6 py-6 bg-[#0d1117] min-h-screen pt-20">
       {/* Filter Bar */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
