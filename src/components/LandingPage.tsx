@@ -22,13 +22,233 @@ export default function LandingPage() {
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#010409' }}>
       {/* --- BACKGROUND --- */}
       <div className="absolute inset-0">
-        {/* Gradient Glow */}
-        <div
-          className="absolute w-[700px] h-[700px] rounded-full opacity-20 blur-[120px] pointer-events-none"
+        {/* Static Grid Pattern Background */}
+        <div 
+          className="absolute inset-0 pointer-events-none opacity-60"
           style={{
-            background: 'radial-gradient(circle, #22c55e 0%, transparent 70%)',
-            left: mousePosition.x - 350,
-            top: mousePosition.y - 350,
+            background: `
+              repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 24px,
+                rgba(34, 197, 94, 0.2) 25px,
+                rgba(34, 197, 94, 0.2) 26px
+              ),
+              repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 24px,
+                rgba(34, 197, 94, 0.2) 25px,
+                rgba(34, 197, 94, 0.2) 26px
+              )
+            `,
+          }}
+        />
+        
+        {/* Animated Red and Green Candlesticks Moving on Grid */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Red Horizontal Moving Candlesticks */}
+          <div className="absolute opacity-70" style={{ animation: 'moveHorizontal1 8s linear infinite' }}>
+            <svg width="12" height="16" viewBox="0 0 12 16">
+              <defs>
+                <linearGradient id="redCandle1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#dc2626" />
+                </linearGradient>
+                <filter id="redGlow1">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <line x1="6" y1="1" x2="6" y2="15" stroke="#ef4444" strokeWidth="1" opacity="0.8"/>
+              <rect x="3" y="4" width="6" height="8" fill="url(#redCandle1)" rx="1" filter="url(#redGlow1)"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-60" style={{ animation: 'moveHorizontal2 12s linear infinite 2s' }}>
+            <svg width="10" height="14" viewBox="0 0 10 14">
+              <line x1="5" y1="1" x2="5" y2="13" stroke="#f87171" strokeWidth="0.8" opacity="0.7"/>
+              <rect x="2.5" y="5" width="5" height="6" fill="#f87171" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-75" style={{ animation: 'moveHorizontal3 10s linear infinite 4s' }}>
+            <svg width="8" height="12" viewBox="0 0 8 12">
+              <line x1="4" y1="1" x2="4" y2="11" stroke="#dc2626" strokeWidth="0.8" opacity="0.9"/>
+              <rect x="2" y="3" width="4" height="6" fill="#dc2626" rx="0.5"/>
+            </svg>
+          </div>
+          
+          {/* Red Vertical Moving Candlesticks */}
+          <div className="absolute opacity-65" style={{ animation: 'moveVertical1 9s linear infinite' }}>
+            <svg width="10" height="14" viewBox="0 0 10 14">
+              <line x1="5" y1="1" x2="5" y2="13" stroke="#ef4444" strokeWidth="0.8" opacity="0.8"/>
+              <rect x="2.5" y="4" width="5" height="7" fill="#ef4444" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-55" style={{ animation: 'moveVertical2 11s linear infinite 3s' }}>
+            <svg width="12" height="16" viewBox="0 0 12 16">
+              <line x1="6" y1="1" x2="6" y2="15" stroke="#f87171" strokeWidth="1" opacity="0.7"/>
+              <rect x="3" y="5" width="6" height="6" fill="#f87171" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-70" style={{ animation: 'moveVertical3 7s linear infinite 1s' }}>
+            <svg width="8" height="12" viewBox="0 0 8 12">
+              <line x1="4" y1="1" x2="4" y2="11" stroke="#dc2626" strokeWidth="0.8" opacity="0.9"/>
+              <rect x="2" y="4" width="4" height="5" fill="#dc2626" rx="0.5"/>
+            </svg>
+          </div>
+          
+          {/* Green Horizontal Moving Candlesticks */}
+          <div className="absolute opacity-70" style={{ animation: 'moveHorizontalGreen1 9s linear infinite 1s' }}>
+            <svg width="10" height="14" viewBox="0 0 10 14">
+              <defs>
+                <linearGradient id="greenCandle1" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#22c55e" />
+                  <stop offset="100%" stopColor="#16a34a" />
+                </linearGradient>
+                <filter id="greenGlow1">
+                  <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+              <line x1="5" y1="1" x2="5" y2="13" stroke="#22c55e" strokeWidth="0.8" opacity="0.8"/>
+              <rect x="2.5" y="4" width="5" height="7" fill="url(#greenCandle1)" rx="1" filter="url(#greenGlow1)"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-60" style={{ animation: 'moveHorizontalGreen2 11s linear infinite 3s' }}>
+            <svg width="12" height="16" viewBox="0 0 12 16">
+              <line x1="6" y1="1" x2="6" y2="15" stroke="#4ade80" strokeWidth="1" opacity="0.7"/>
+              <rect x="3" y="5" width="6" height="8" fill="#4ade80" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-75" style={{ animation: 'moveHorizontalGreen3 8s linear infinite 5s' }}>
+            <svg width="8" height="12" viewBox="0 0 8 12">
+              <line x1="4" y1="1" x2="4" y2="11" stroke="#16a34a" strokeWidth="0.8" opacity="0.9"/>
+              <rect x="2" y="3" width="4" height="6" fill="#16a34a" rx="0.5"/>
+            </svg>
+          </div>
+          
+          {/* Green Vertical Moving Candlesticks */}
+          <div className="absolute opacity-65" style={{ animation: 'moveVerticalGreen1 10s linear infinite 2s' }}>
+            <svg width="10" height="14" viewBox="0 0 10 14">
+              <line x1="5" y1="1" x2="5" y2="13" stroke="#22c55e" strokeWidth="0.8" opacity="0.8"/>
+              <rect x="2.5" y="4" width="5" height="6" fill="#22c55e" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-55" style={{ animation: 'moveVerticalGreen2 12s linear infinite 4s' }}>
+            <svg width="12" height="16" viewBox="0 0 12 16">
+              <line x1="6" y1="1" x2="6" y2="15" stroke="#4ade80" strokeWidth="1" opacity="0.7"/>
+              <rect x="3" y="6" width="6" height="6" fill="#4ade80" rx="1"/>
+            </svg>
+          </div>
+          
+          <div className="absolute opacity-70" style={{ animation: 'moveVerticalGreen3 6s linear infinite' }}>
+            <svg width="8" height="12" viewBox="0 0 8 12">
+              <line x1="4" y1="1" x2="4" y2="11" stroke="#16a34a" strokeWidth="0.8" opacity="0.9"/>
+              <rect x="2" y="4" width="4" height="5" fill="#16a34a" rx="0.5"/>
+            </svg>
+          </div>
+        </div>
+        
+        {/* CSS Animations for Red Pulses */}
+        <style jsx>{`
+          @keyframes moveHorizontal1 {
+            0% { left: -20px; top: 15%; }
+            100% { left: 100%; top: 15%; }
+          }
+          @keyframes moveHorizontal2 {
+            0% { left: -15px; top: 45%; }
+            100% { left: 100%; top: 45%; }
+          }
+          @keyframes moveHorizontal3 {
+            0% { left: -10px; top: 75%; }
+            100% { left: 100%; top: 75%; }
+          }
+          @keyframes moveVertical1 {
+            0% { top: -20px; left: 25%; }
+            100% { top: 100%; left: 25%; }
+          }
+          @keyframes moveVertical2 {
+            0% { top: -15px; left: 55%; }
+            100% { top: 100%; left: 55%; }
+          }
+          @keyframes moveVertical3 {
+            0% { top: -10px; left: 85%; }
+            100% { top: 100%; left: 85%; }
+          }
+          @keyframes moveHorizontalGreen1 {
+            0% { left: -15px; top: 30%; }
+            100% { left: 100%; top: 30%; }
+          }
+          @keyframes moveHorizontalGreen2 {
+            0% { left: -20px; top: 60%; }
+            100% { left: 100%; top: 60%; }
+          }
+          @keyframes moveHorizontalGreen3 {
+            0% { left: -10px; top: 90%; }
+            100% { left: 100%; top: 90%; }
+          }
+          @keyframes moveVerticalGreen1 {
+            0% { top: -15px; left: 15%; }
+            100% { top: 100%; left: 15%; }
+          }
+          @keyframes moveVerticalGreen2 {
+            0% { top: -20px; left: 45%; }
+            100% { top: 100%; left: 45%; }
+          }
+          @keyframes moveVerticalGreen3 {
+            0% { top: -10px; left: 75%; }
+            100% { top: 100%; left: 75%; }
+          }
+        `}</style>
+        
+        {/* Glowy Dots in Circular Form */}
+        <div
+          className="absolute w-[300px] h-[300px] pointer-events-none opacity-60"
+          style={{
+            left: mousePosition.x - 150,
+            top: mousePosition.y - 150,
+            background: `
+              radial-gradient(circle 3px at 15px 15px, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0.3) 30%, transparent 60%),
+              radial-gradient(circle 2px at 30px 30px, rgba(34, 197, 94, 0.6) 0%, rgba(34, 197, 94, 0.2) 40%, transparent 70%),
+              radial-gradient(circle 2px at 45px 15px, rgba(34, 197, 94, 0.7) 0%, rgba(34, 197, 94, 0.2) 35%, transparent 65%),
+              radial-gradient(circle 1px at 60px 45px, rgba(34, 197, 94, 0.9) 0%, rgba(34, 197, 94, 0.4) 25%, transparent 55%)
+            `,
+            backgroundSize: '30px 30px, 60px 60px, 30px 30px, 15px 15px',
+            maskImage: 'radial-gradient(circle at center, black 0%, black 40%, transparent 70%)',
+            WebkitMaskImage: 'radial-gradient(circle at center, black 0%, black 40%, transparent 70%)',
+            filter: 'blur(0.5px)',
+          }}
+        />
+        
+        {/* Inner Concentrated Dots */}
+        <div
+          className="absolute w-[200px] h-[200px] pointer-events-none opacity-40"
+          style={{
+            left: mousePosition.x - 100,
+            top: mousePosition.y - 100,
+            background: `
+              radial-gradient(circle 2px at 20px 20px, rgba(34, 197, 94, 1) 0%, rgba(34, 197, 94, 0.5) 20%, transparent 50%),
+              radial-gradient(circle 1px at 10px 30px, rgba(34, 197, 94, 0.8) 0%, rgba(34, 197, 94, 0.3) 30%, transparent 60%),
+              radial-gradient(circle 1px at 35px 10px, rgba(34, 197, 94, 0.9) 0%, rgba(34, 197, 94, 0.4) 25%, transparent 55%),
+              radial-gradient(circle 1px at 5px 5px, rgba(34, 197, 94, 0.7) 0%, rgba(34, 197, 94, 0.2) 40%, transparent 70%)
+            `,
+            backgroundSize: '40px 40px, 20px 20px, 30px 30px, 10px 10px',
+            maskImage: 'radial-gradient(circle at center, black 0%, black 30%, transparent 60%)',
+            WebkitMaskImage: 'radial-gradient(circle at center, black 0%, black 30%, transparent 60%)',
+            filter: 'blur(0.3px)',
           }}
         />
 
