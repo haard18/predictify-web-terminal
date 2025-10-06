@@ -1,15 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Chivo+Mono:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geo:wght@300;400;600;700;900&display=swap');
 
 @import "tailwindcss";
 
-/* Custom color variables - GitHub Theme */
+/* Custom color variables - app palette per design */
 :root {
-  --bg-primary: #0d1117;
-  --bg-secondary: #161b22;
+  --bg-primary: #1A1C1B; /* Black */
+  --bg-secondary: #2A2e2e; /* Gray */
   --bg-tertiary: #21262d;
-  --accent-green: #00DF82;
-  --yes-color: #21DF00;
-  --no-color: #BE1010;
+  --accent-green: #00DF82; /* Green */
+  --yes-color: #21DF00; /* YES */
+  --no-color: #BE1010; /* NO */
   --text-primary: #f0f6fc;
   --text-secondary: #7d8590;
   --border-primary: #30363d;
@@ -75,7 +75,13 @@
 }
 
 .font-mono {
-  font-family: 'Chivo Mono', monospace;
+  /* kept name for compatibility with existing classes */
+  font-family: 'Geo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+}
+
+/* Apply Geo as the default app font */
+body {
+  font-family: 'Geo', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
 }
 
 /* Line clamping utilities */

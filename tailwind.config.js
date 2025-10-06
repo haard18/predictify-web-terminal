@@ -9,7 +9,7 @@ module.exports = {
     extend: {
       fontFamily: {
         'inter': ['Inter', 'sans-serif'],
-        'chivo': ['Chivo Mono', 'monospace'],
+        'geo': ['Geo', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial'],
       },
       colors: {
         primary: '#1A1C1B',
