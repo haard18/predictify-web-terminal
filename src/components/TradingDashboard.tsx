@@ -35,7 +35,7 @@ export default function TradingDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-primary text-white">
+    <div className="min-h-screen text-[#f0f6fc]" style={{ backgroundColor: '#0d1117' }}>
       {/* Top Navigation - Fixed */}
       <TopNav 
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -45,7 +45,7 @@ export default function TradingDashboard() {
       {/* Main content with top padding for fixed navbar */}
       <div className="pt-16"> 
         {/* Page Content */}
-        <main className="bg-primary min-h-screen">
+        <main className="min-h-screen" style={{ backgroundColor: '#0d1117' }}>
           {renderActivePage()}
         </main>
       </div>

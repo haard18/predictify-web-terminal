@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="font-mono antialiased bg-primary text-white">
+      <body className="font-mono antialiased text-[#f0f6fc]" style={{ backgroundColor: '#0d1117' }}>
         {children}
       </body>
     </html>

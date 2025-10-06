@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { polymarketAPI, PolymarketMarket } from '@/lib/polymarket-api';
+import FilterModal, { FilterOptions } from '@/components/shared/FilterModal';
 
 interface PricePoint {
   timestamp: number;
@@ -123,6 +124,18 @@ export default function DiscoverPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [chartDataCache, setChartDataCache] = useState<Record<string, number[]>>({});
   const [loadingCharts, setLoadingCharts] = useState<Record<string, boolean>>({});
+  const [sortBy, setSortBy] = useState<'price' | 'liquidity' | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState<FilterOptions>({
+    categories: [],
+    priceRange: { min: 0, max: 100 },
+    liquidityRange: { min: 0, max: 10000000 },
+    searchKeywords: [],
+    excludeKeywords: [],
+    sortBy: 'volume',
+    showActiveOnly: true
+  });
   const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 
   const fetchMarkets = async () => {
@@ -168,6 +181,33 @@ export default function DiscoverPage() {
 
   const formatPrice = (price: number) => {
     return `${Math.round(price * 100)}¢`;
+  };
+
+  // Sorting function
+  const handleSort = (column: 'price' | 'liquidity') => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(column);
+      setSortOrder('desc');
+    }
+  };
+
+  // Filter application function
+  const applyFilters = (filters: FilterOptions) => {
+    setActiveFilters(filters);
+  };
+
+  // Count active filters
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (activeFilters.categories.length > 0) count++;
+    if (activeFilters.searchKeywords.length > 0) count++;
+    if (activeFilters.excludeKeywords.length > 0) count++;
+    if (activeFilters.priceRange.min > 0 || activeFilters.priceRange.max < 100) count++;
+    if (activeFilters.liquidityRange.min > 0 || activeFilters.liquidityRange.max < 10000000) count++;
+    if (!activeFilters.showActiveOnly) count++;
+    return count;
   };
 
   // Fetch chart data from API
@@ -277,64 +317,162 @@ export default function DiscoverPage() {
     );
   };
 
-  // Filter markets based on search query and selected category
+  // Filter and sort markets based on search query, active filters, and sorting preferences
   const filteredMarkets = markets.filter(market => {
-    // First filter by search query
+    // Search query filter
     const matchesSearch = !searchQuery || 
       market.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.category?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       market.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    // Then filter by category
-    if (selectedCategory === 'all') return matchesSearch;
-    
-    const tags = market.tags?.map(tag => tag.toLowerCase()) || [];
-    const category = market.category?.toLowerCase() || '';
-    const name = market.name.toLowerCase();
-    
-    let matchesCategory = false;
-    
-    switch (selectedCategory) {
-      case 'sports':
-        matchesCategory = tags.some(tag => ['sports', 'nfl', 'football', 'soccer', 'basketball', 'nba'].includes(tag)) ||
-                         category.includes('sport') || name.includes('nfl') || name.includes('premier league');
-        break;
-      case 'politics':
-        matchesCategory = tags.some(tag => ['politics', 'election'].includes(tag)) ||
-                         category.includes('politic') || name.includes('election');
-        break;
-      case 'crypto':
-        matchesCategory = tags.some(tag => ['crypto', 'bitcoin', 'btc', 'ethereum', 'eth'].includes(tag)) ||
-                         category.includes('crypto') || name.includes('bitcoin') || name.includes('ethereum');
-        break;
-      case 'technology':
-        matchesCategory = tags.some(tag => ['tech', 'ai', 'technology'].includes(tag)) ||
-                         category.includes('tech') || name.includes('gpt') || name.includes('ai');
-        break;
-      case 'entertainment':
-        matchesCategory = tags.some(tag => ['entertainment', 'movie', 'avengers'].includes(tag)) ||
-                         name.includes('avengers') || name.includes('movie');
-        break;
-      case 'health':
-        matchesCategory = tags.some(tag => ['health', 'medical', 'vaccine'].includes(tag)) ||
-                         name.includes('vaccine') || name.includes('cancer');
-        break;
-      case 'world':
-        matchesCategory = tags.some(tag => ['world', 'war', 'ukraine', 'russia'].includes(tag)) ||
-                         name.includes('war') || name.includes('ukraine');
-        break;
-      case 'economics':
-        matchesCategory = tags.some(tag => ['economics', 'economy', 'finance', 'market'].includes(tag)) ||
-                         category.includes('econom') || name.includes('gdp') || name.includes('inflation');
-        break;
-      case 'climate':
-        matchesCategory = tags.some(tag => ['climate', 'environment', 'weather'].includes(tag)) ||
-                         name.includes('climate') || name.includes('temperature') || name.includes('weather');
-        break;
+    // Active only filter
+    if (activeFilters.showActiveOnly && !market.active) return false;
+
+    // Category filter from advanced filters
+    if (activeFilters.categories.length > 0) {
+      const tags = market.tags?.map(tag => tag.toLowerCase()) || [];
+      const category = market.category?.toLowerCase() || '';
+      const name = market.name.toLowerCase();
+      
+      const matchesCategory = activeFilters.categories.some(filterCategory => {
+        switch (filterCategory) {
+          case 'crypto':
+            return tags.some(tag => ['crypto', 'bitcoin', 'btc', 'ethereum', 'eth'].includes(tag)) ||
+                   category.includes('crypto') || name.includes('bitcoin') || name.includes('ethereum');
+          case 'politics':
+            return tags.some(tag => ['politics', 'election'].includes(tag)) ||
+                   category.includes('politic') || name.includes('election');
+          case 'sports':
+            return tags.some(tag => ['sports', 'nfl', 'football', 'soccer', 'basketball', 'nba'].includes(tag)) ||
+                   category.includes('sport') || name.includes('nfl') || name.includes('premier league');
+          case 'tech':
+            return tags.some(tag => ['tech', 'ai', 'technology'].includes(tag)) ||
+                   category.includes('tech') || name.includes('gpt') || name.includes('ai');
+          case 'entertainment':
+            return tags.some(tag => ['entertainment', 'movie', 'avengers'].includes(tag)) ||
+                   name.includes('avengers') || name.includes('movie');
+          case 'health':
+            return tags.some(tag => ['health', 'medical', 'vaccine'].includes(tag)) ||
+                   name.includes('vaccine') || name.includes('cancer');
+          case 'world':
+            return tags.some(tag => ['world', 'war', 'ukraine', 'russia'].includes(tag)) ||
+                   name.includes('war') || name.includes('ukraine');
+          case 'economics':
+            return tags.some(tag => ['economics', 'economy', 'finance', 'market'].includes(tag)) ||
+                   category.includes('econom') || name.includes('gdp') || name.includes('inflation');
+          case 'climate':
+            return tags.some(tag => ['climate', 'environment', 'weather'].includes(tag)) ||
+                   name.includes('climate') || name.includes('temperature') || name.includes('weather');
+          default:
+            return false;
+        }
+      });
+      
+      if (!matchesCategory) return false;
+    }
+
+    // Legacy category filter (for backward compatibility with carousel)
+    if (selectedCategory !== 'all') {
+      const tags = market.tags?.map(tag => tag.toLowerCase()) || [];
+      const category = market.category?.toLowerCase() || '';
+      const name = market.name.toLowerCase();
+      
+      let matchesLegacyCategory = false;
+      
+      switch (selectedCategory) {
+        case 'sports':
+          matchesLegacyCategory = tags.some(tag => ['sports', 'nfl', 'football', 'soccer', 'basketball', 'nba'].includes(tag)) ||
+                           category.includes('sport') || name.includes('nfl') || name.includes('premier league');
+          break;
+        case 'politics':
+          matchesLegacyCategory = tags.some(tag => ['politics', 'election'].includes(tag)) ||
+                           category.includes('politic') || name.includes('election');
+          break;
+        case 'crypto':
+          matchesLegacyCategory = tags.some(tag => ['crypto', 'bitcoin', 'btc', 'ethereum', 'eth'].includes(tag)) ||
+                           category.includes('crypto') || name.includes('bitcoin') || name.includes('ethereum');
+          break;
+        case 'technology':
+          matchesLegacyCategory = tags.some(tag => ['tech', 'ai', 'technology'].includes(tag)) ||
+                           category.includes('tech') || name.includes('gpt') || name.includes('ai');
+          break;
+        case 'entertainment':
+          matchesLegacyCategory = tags.some(tag => ['entertainment', 'movie', 'avengers'].includes(tag)) ||
+                           name.includes('avengers') || name.includes('movie');
+          break;
+        case 'health':
+          matchesLegacyCategory = tags.some(tag => ['health', 'medical', 'vaccine'].includes(tag)) ||
+                           name.includes('vaccine') || name.includes('cancer');
+          break;
+        case 'world':
+          matchesLegacyCategory = tags.some(tag => ['world', 'war', 'ukraine', 'russia'].includes(tag)) ||
+                           name.includes('war') || name.includes('ukraine');
+          break;
+        case 'economics':
+          matchesLegacyCategory = tags.some(tag => ['economics', 'economy', 'finance', 'market'].includes(tag)) ||
+                           category.includes('econom') || name.includes('gdp') || name.includes('inflation');
+          break;
+        case 'climate':
+          matchesLegacyCategory = tags.some(tag => ['climate', 'environment', 'weather'].includes(tag)) ||
+                           name.includes('climate') || name.includes('temperature') || name.includes('weather');
+          break;
+      }
+      
+      if (!matchesLegacyCategory) return false;
+    }
+
+    // Price range filter
+    const priceInCents = Math.round(market.currentPrice * 100);
+    if (priceInCents < activeFilters.priceRange.min || priceInCents > activeFilters.priceRange.max) {
+      return false;
+    }
+
+    // Liquidity range filter
+    if (market.liquidity < activeFilters.liquidityRange.min || market.liquidity > activeFilters.liquidityRange.max) {
+      return false;
+    }
+
+    // Search keywords filter
+    if (activeFilters.searchKeywords.length > 0) {
+      const searchableText = `${market.name} ${market.description} ${market.category} ${market.tags?.join(' ')}`.toLowerCase();
+      const hasAllKeywords = activeFilters.searchKeywords.every(keyword => 
+        searchableText.includes(keyword.toLowerCase())
+      );
+      if (!hasAllKeywords) return false;
+    }
+
+    // Exclude keywords filter
+    if (activeFilters.excludeKeywords.length > 0) {
+      const searchableText = `${market.name} ${market.description} ${market.category} ${market.tags?.join(' ')}`.toLowerCase();
+      const hasExcludedKeywords = activeFilters.excludeKeywords.some(keyword => 
+        searchableText.includes(keyword.toLowerCase())
+      );
+      if (hasExcludedKeywords) return false;
     }
     
-    return matchesSearch && matchesCategory;
+    return matchesSearch;
+  }).sort((a, b) => {
+    // Apply sorting if a sort column is selected
+    if (!sortBy) return 0;
+    
+    let aValue: number, bValue: number;
+    
+    if (sortBy === 'price') {
+      aValue = a.currentPrice;
+      bValue = b.currentPrice;
+    } else if (sortBy === 'liquidity') {
+      aValue = a.liquidity;
+      bValue = b.liquidity;
+    } else {
+      return 0;
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue - bValue;
+    } else {
+      return bValue - aValue;
+    }
   });
 
   return (
@@ -358,11 +496,23 @@ export default function DiscoverPage() {
             />
           </div>
           
-          <button className="flex items-center space-x-2 px-4 py-2 border border-[#30363d] text-[#f0f6fc] bg-[#21262d] rounded-md hover:bg-[#30363d] hover:border-[#8b949e] text-sm font-medium transition-all duration-200">
+          <button 
+            onClick={() => setIsFilterOpen(true)}
+            className={`flex items-center space-x-2 px-4 py-2 border rounded-md text-sm font-medium transition-all duration-200 ${
+              getActiveFilterCount() > 0 
+                ? 'border-[#58a6ff] text-[#58a6ff] bg-[#0d1117] hover:bg-[#161b22]'
+                : 'border-[#30363d] text-[#f0f6fc] bg-[#21262d] hover:bg-[#30363d] hover:border-[#8b949e]'
+            }`}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z" />
             </svg>
             <span>Filter</span>
+            {getActiveFilterCount() > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 bg-[#58a6ff] text-white text-xs rounded-full min-w-[18px] text-center">
+                {getActiveFilterCount()}
+              </span>
+            )}
           </button>
         </div>
         
@@ -419,8 +569,66 @@ export default function DiscoverPage() {
             Name
           </div>
           <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Chart</div>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Price</div>
-          <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Liquidity</div>
+          <button 
+            onClick={() => handleSort('price')}
+            className="text-[#7d8590] hover:text-[#f0f6fc] font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
+          >
+            <span>Price</span>
+            <div className="flex flex-col ml-1">
+              <svg 
+                className={`w-4 h-4 transition-colors duration-150 ${
+                  sortBy === 'price' && sortOrder === 'desc' 
+                    ? 'text-[#58a6ff]' 
+                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                }`} 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L10 6.414 6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+              <svg 
+                className={`w-4 h-4 -mt-1.5 transition-colors duration-150 ${
+                  sortBy === 'price' && sortOrder === 'asc' 
+                    ? 'text-[#58a6ff]' 
+                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                }`} 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L10 13.586l3.293-3.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </button>
+          <button 
+            onClick={() => handleSort('liquidity')}
+            className="text-[#7d8590] hover:text-[#f0f6fc] font-semibold text-xs tracking-wide flex items-center justify-center space-x-1 transition-colors duration-150 group"
+          >
+            <span>Liquidity</span>
+            <div className="flex flex-col ml-1">
+              <svg 
+                className={`w-4 h-4 transition-colors duration-150 ${
+                  sortBy === 'liquidity' && sortOrder === 'desc' 
+                    ? 'text-[#58a6ff]' 
+                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                }`} 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L10 6.414 6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+              <svg 
+                className={`w-4 h-4 -mt-1.5 transition-colors duration-150 ${
+                  sortBy === 'liquidity' && sortOrder === 'asc' 
+                    ? 'text-[#58a6ff]' 
+                    : 'text-[#7d8590] group-hover:text-[#f0f6fc]'
+                }`} 
+                fill="currentColor" 
+                viewBox="0 0 20 20"
+              >
+                <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L10 13.586l3.293-3.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </button>
           <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Opened</div>
           <div className="text-[#7d8590] font-semibold text-xs tracking-wide text-center">Expires</div>
         </div>
@@ -575,6 +783,14 @@ export default function DiscoverPage() {
         </div>
       </div>
     </div>
+
+    {/* Filter Modal */}
+    <FilterModal
+      isOpen={isFilterOpen}
+      onClose={() => setIsFilterOpen(false)}
+      onApplyFilters={applyFilters}
+      currentFilters={activeFilters}
+    />
     </>
   );
 }
