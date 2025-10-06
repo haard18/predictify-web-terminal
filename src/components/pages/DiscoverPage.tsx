@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { RefreshCw } from 'lucide-react';
 import { clsx } from 'clsx';
 import { polymarketAPI, PolymarketMarket } from '@/lib/polymarket-api';
@@ -118,6 +119,7 @@ const tradingCategories = [
 ];
 
 export default function DiscoverPage() {
+  const router = useRouter();
   const [markets, setMarkets] = useState<PolymarketMarket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -686,6 +688,7 @@ export default function DiscoverPage() {
                 key={market.id}
                 className="grid gap-4 px-4 py-3 border-b border-[#21262d] last:border-b-0 hover:bg-[#161b22] transition-colors duration-150 cursor-pointer group"
                 style={{gridTemplateColumns: '2.5fr 1fr 1.2fr 1fr 1fr 1fr'}}
+                onClick={() => router.push(`/market/${market.id}`)}
                 onMouseEnter={() => setHoveredRow(market.id)}
                 onMouseLeave={() => setHoveredRow(null)}
               >

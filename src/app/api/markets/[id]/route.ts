@@ -1,199 +1,178 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const POLYMARKET_API_BASE = 'https://clob.polymarket.com';
+const POLY_CLOB = 'https://clob.polymarket.com';
+const POLY_GAMMA = 'https://gamma-api.polymarket.com';
+
+async function fetchJson(url: string, opts: any = {}) {
+  const res = await fetch(url, { method: 'GET', cache: 'no-store', ...opts });
+  if (!res.ok) throw new Error(`Fetch failed ${res.status} ${res.statusText} - ${url}`);
+  return res.json();
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: marketId } = await params;
+
   try {
-    const { id: marketId } = await params;
     console.log('Fetching market details for ID:', marketId);
 
-    // Fetch market details
-    const marketResponse = await fetch(`${POLYMARKET_API_BASE}/markets/${marketId}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      cache: 'no-store',
-    });
-
-    if (!marketResponse.ok) {
-      throw new Error(`Failed to fetch market: ${marketResponse.status}`);
-    }
-
-    const market = await marketResponse.json();
-
-    // Fetch orderbook data (if available)
-    let orderbook = null;
+    // Prefer Gamma for market metadata (question, description, outcomes)
+    let market: any = null;
     try {
-      const orderbookResponse = await fetch(`${POLYMARKET_API_BASE}/book?token_id=${market.tokens?.[0]?.token_id}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        cache: 'no-store',
-      });
-      
-      if (orderbookResponse.ok) {
-        orderbook = await orderbookResponse.json();
-      }
-    } catch (error) {
-      console.warn('Failed to fetch orderbook:', error);
+      const gammaUrl = `${POLY_GAMMA}/markets/${encodeURIComponent(marketId)}`;
+      market = await fetchJson(gammaUrl, { headers: { Accept: 'application/json' } });
+    } catch (e) {
+      // Gamma may not have the market; fallback to CLOB for market metadata
+      console.warn('Gamma market fetch failed, falling back to CLOB for market metadata');
+      const marketUrl = `${POLY_CLOB}/markets/${encodeURIComponent(marketId)}`;
+      market = await fetchJson(marketUrl, { headers: { Accept: 'application/json' } });
     }
 
-    // Generate mock price history for the chart
-    const generatePriceHistory = () => {
-      const days = 30;
-      const basePrice = market.tokens?.[0]?.price || 0.5;
-      const history = [];
-      
-      for (let i = days; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        
-        // Generate realistic price movement
-        const volatility = 0.1;
-        const randomChange = (Math.random() - 0.5) * volatility;
-        const price = Math.max(0.01, Math.min(0.99, basePrice + randomChange));
-        
-        history.push({
-          timestamp: date.toISOString(),
-          price: price,
-          volume: Math.random() * 10000,
-        });
+    // Determine tokens (outcomes) for the market. Prefer CLOB tokens when available for orderbook linkage.
+    let tokens: any[] = [];
+    // Gamma sometimes provides clobTokenIds or clob_token_ids; try to extract
+    if (market.clobTokenIds && typeof market.clobTokenIds === 'string') {
+      tokens = market.clobTokenIds.split(',').map((t: string) => ({ token_id: t.trim() }));
+    }
+    if (tokens.length === 0 && market.clob_token_ids && typeof market.clob_token_ids === 'string') {
+      tokens = market.clob_token_ids.split(',').map((t: string) => ({ token_id: t.trim() }));
+    }
+    // If still missing, try CLOB market tokens
+    if (tokens.length === 0) {
+      try {
+        const clobMarket = await fetchJson(`${POLY_CLOB}/markets/${encodeURIComponent(marketId)}`, { headers: { Accept: 'application/json' } });
+        tokens = clobMarket.tokens || [];
+      } catch (e) {
+        // leave tokens empty and let downstream fallback handle it
+        tokens = market.tokens || [];
       }
-      
-      return history;
+    }
+
+    // Fetch orderbook for each token in parallel (if tokens exist)
+    const orderbookByToken: Record<string, any> = {};
+    if (tokens.length > 0) {
+      await Promise.all(tokens.map(async (token: any) => {
+        try {
+          const bookUrl = `${POLY_CLOB}/book?token_id=${encodeURIComponent(token.token_id)}`;
+          const book = await fetchJson(bookUrl, { headers: { Accept: 'application/json' } });
+          orderbookByToken[token.token_id] = book;
+        } catch (err) {
+            const e: any = err;
+            console.warn('Orderbook fetch failed for token', token.token_id, e?.message || e);
+            orderbookByToken[token.token_id] = null;
+          }
+      }));
+    }
+
+    // Try to enrich market data from Gamma API (if available)
+    let gammaData: any = null;
+    try {
+      // Gamma may expose events or markets endpoint - try both safely
+      const gammaMarketUrl = `${POLY_GAMMA}/events/${marketId}`;
+      gammaData = await fetchJson(gammaMarketUrl, { headers: { Accept: 'application/json' } });
+    } catch (e) {
+      // ignore gamma enrichment failure
+      gammaData = null;
+    }
+
+    // Build outcomes array with prices and attached orderbooks
+    const outcomes = (tokens.length > 0 ? tokens : [
+      { token_id: '1', outcome: 'Yes', price: '0.5' },
+      { token_id: '2', outcome: 'No', price: '0.5' }
+    ]).map((t: any) => ({
+      id: t.token_id || t.id,
+      label: t.outcome || t.name || t.symbol || `Outcome ${t.token_id || '1'}`,
+      price: typeof t.price === 'string' ? parseFloat(t.price) : (t.price ?? 0),
+      isWinner: !!t.winner,
+      orderbook: orderbookByToken[t.token_id] || null,
+    }));
+
+    // Simple price history generator as fallback (30 days) using token[0] as base
+    const generatePriceHistory = (base = 0.5, days = 30) => {
+      const arr: any[] = [];
+      for (let i = days; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const vol = Math.max(0.01, Math.min(0.99, base + (Math.random() - 0.5) * 0.12));
+        arr.push({ timestamp: d.toISOString(), price: parseFloat(vol.toFixed(4)) });
+      }
+      return arr;
     };
 
-    // Transform the data
-    const transformedMarket = {
+    const basePrice = outcomes[0]?.price ?? 0.5;
+
+    // Recent trades endpoint could be different; construct a mock if missing
+    let recentTrades: any[] = [];
+    try {
+      // CLOB may expose trades; try a reasonable endpoint
+      const tradesUrl = `${POLY_CLOB}/trades?market_id=${encodeURIComponent(marketId)}&limit=20`;
+      recentTrades = await fetchJson(tradesUrl, { headers: { Accept: 'application/json' } });
+    } catch (e) {
+      // fallback mock trades
+      recentTrades = [
+        { timestamp: new Date().toISOString(), price: outcomes[0]?.price ?? basePrice, size: 500, side: 'buy' },
+        { timestamp: new Date(Date.now() - 60000).toISOString(), price: outcomes[0]?.price ?? basePrice, size: 300, side: 'sell' },
+      ];
+    }
+
+    const transformed = {
       id: market.condition_id || marketId,
-      name: market.question || 'Unknown Market',
-      description: market.description || market.question || 'No description available',
-      category: (market.tags && market.tags[0]) || 'Other',
-      image: market.image,
-      icon: market.icon,
-      endDate: market.end_date_iso,
-      startDate: market.game_start_time,
+      name: market.question || market.title || market.name || gammaData?.title || 'Unknown Market',
+      description: market.description || gammaData?.description || market.question || '',
+      category: (market.tags && market.tags[0]) || gammaData?.tags || 'Other',
+      image: market.image || gammaData?.image || null,
+      icon: market.icon || gammaData?.icon || null,
+      endDate: market.end_date_iso || market.endDate || market.end_date || gammaData?.endDate || null,
+      startDate: market.start_date_iso || market.startDate || market.game_start_time || null,
       active: market.active !== false,
       closed: market.closed === true,
-      tags: market.tags || [],
-      resolutionSource: market.resolutionSource,
-      minBetAmount: market.minimum_order_size || 10,
-      minTickSize: market.minimum_tick_size || 0.01,
-      
-      // Outcomes and prices
-      outcomes: market.tokens?.map((token: any) => ({
-        id: token.token_id,
-        name: token.outcome,
-        price: parseFloat(token.price || '0'),
-        winner: token.winner || false,
-      })) || [
-        { id: '1', name: 'Yes', price: 0.65, winner: false },
-        { id: '2', name: 'No', price: 0.35, winner: false }
-      ],
-
-      // Market stats
-      volume24h: parseFloat(market.volume || '0'),
-      liquidity: parseFloat(market.liquidity || '0'),
-      
-      // Price history for chart
-      priceHistory: generatePriceHistory(),
-      
-      // Orderbook
-      orderbook: orderbook || {
-        bids: [
-          { price: 0.64, size: 1000 },
-          { price: 0.63, size: 1500 },
-          { price: 0.62, size: 2000 },
-          { price: 0.61, size: 2500 },
-          { price: 0.60, size: 3000 },
-        ],
-        asks: [
-          { price: 0.66, size: 800 },
-          { price: 0.67, size: 1200 },
-          { price: 0.68, size: 1800 },
-          { price: 0.69, size: 2200 },
-          { price: 0.70, size: 2800 },
-        ]
-      },
-      
-      // Recent trades (mock data)
-      recentTrades: [
-        { timestamp: new Date().toISOString(), price: 0.65, size: 500, side: 'buy' },
-        { timestamp: new Date(Date.now() - 60000).toISOString(), price: 0.64, size: 300, side: 'sell' },
-        { timestamp: new Date(Date.now() - 120000).toISOString(), price: 0.65, size: 750, side: 'buy' },
-        { timestamp: new Date(Date.now() - 180000).toISOString(), price: 0.63, size: 200, side: 'sell' },
-        { timestamp: new Date(Date.now() - 240000).toISOString(), price: 0.64, size: 1000, side: 'buy' },
-      ],
+      tags: market.tags || gammaData?.tags || [],
+      resolutionSource: market.resolutionSource || null,
+      minBetAmount: market.minimum_order_size || market.min_order_size || null,
+      minTickSize: market.minimum_tick_size || market.min_tick_size || null,
+      outcomes,
+      volume24h: parseFloat(market.volume || market.volume24h || '0') || 0,
+      liquidity: parseFloat(market.liquidity || market.liquidityNum || '0') || 0,
+      priceHistory: market.price_history || generatePriceHistory(basePrice, 30),
+      recentTrades,
+      fetchedAt: new Date().toISOString(),
     };
 
-    return NextResponse.json(transformedMarket, {
+    return NextResponse.json(transformed, {
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
+  } catch (err: any) {
+    console.error('Error in market detail API:', err?.message || err);
 
-  } catch (error) {
-    console.error('Error fetching market details:', error);
-    
-    // Get the marketId for the fallback response
-    const { id: marketId } = await params;
-    
-    // Return mock data as fallback
-    const mockMarket = {
+    // Fallback response with minimal mock data
+    const mock = {
       id: marketId,
-      name: 'Sample Prediction Market',
-      description: 'This is a sample market for demonstration purposes.',
-      category: 'Demo',
-      image: null,
-      icon: null,
-      endDate: '2025-12-31T23:59:59Z',
-      active: true,
-      closed: false,
-      tags: ['demo', 'sample'],
-      
+      name: 'Sample Market (fallback)',
+      description: 'Fallback data: failed to fetch live market details',
       outcomes: [
-        { id: '1', name: 'Yes', price: 0.65, winner: false },
-        { id: '2', name: 'No', price: 0.35, winner: false }
+        { id: '1', label: 'Yes', price: 0.65, orderbook: null },
+        { id: '2', label: 'No', price: 0.35, orderbook: null },
       ],
-      
-      volume24h: 50000,
-      liquidity: 250000,
-      
+      volume24h: 0,
+      liquidity: 0,
       priceHistory: [],
-      
-      orderbook: {
-        bids: [
-          { price: 0.64, size: 1000 },
-          { price: 0.63, size: 1500 },
-          { price: 0.62, size: 2000 },
-        ],
-        asks: [
-          { price: 0.66, size: 800 },
-          { price: 0.67, size: 1200 },
-          { price: 0.68, size: 1800 },
-        ]
-      },
-      
-      recentTrades: [
-        { timestamp: new Date().toISOString(), price: 0.65, size: 500, side: 'buy' },
-        { timestamp: new Date(Date.now() - 60000).toISOString(), price: 0.64, size: 300, side: 'sell' },
-      ],
+      recentTrades: [],
+      fetchedAt: new Date().toISOString(),
+      error: err?.message || String(err),
     };
 
-    return NextResponse.json(mockMarket, {
+    return NextResponse.json(mock, {
       status: 500,
       headers: {
         'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
+        Pragma: 'no-cache',
+        Expires: '0',
       },
     });
   }

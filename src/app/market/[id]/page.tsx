@@ -65,8 +65,54 @@ export default function MarketDetailsPage() {
         }
         
         const data = await response.json();
-        setMarket(data);
-        setSelectedOutcome(data.outcomes[0]?.id || '');
+
+        // Normalize API response (new endpoint returns outcomes with { id, label, price, orderbook })
+        const normalizedMarket: any = {
+          // keep existing keys if present
+          id: data.id,
+          name: data.name || data.title || data.question || 'Unknown Market',
+          description: data.description || '',
+          category: data.category || 'Other',
+          image: data.image || null,
+          icon: data.icon || null,
+          endDate: data.endDate || data.end_date || data.end_date_iso || null,
+          startDate: data.startDate || data.start_date || data.start_date_iso || null,
+          active: data.active ?? true,
+          closed: data.closed ?? false,
+          tags: data.tags || [],
+          resolutionSource: data.resolutionSource || data.resolution_source || null,
+          minBetAmount: data.minBetAmount ?? data.minimum_order_size ?? 1,
+          minTickSize: data.minTickSize ?? data.minimum_tick_size ?? 0.01,
+
+          // Map outcomes to the shape the UI expects
+          outcomes: (data.outcomes || []).map((o: any) => ({
+            id: o.id,
+            name: o.label || o.name || o.outcome || `Outcome ${o.id}`,
+            price: typeof o.price === 'string' ? parseFloat(o.price) : (o.price ?? 0),
+            winner: o.isWinner ?? o.winner ?? false,
+            orderbook: o.orderbook || null,
+          })),
+
+          // Volume / liquidity
+          volume24h: data.volume24h ?? data.volume ?? 0,
+          liquidity: data.liquidity ?? 0,
+
+          // Price history and trades
+          priceHistory: data.priceHistory || data.price_history || [],
+          recentTrades: data.recentTrades || data.recent_trades || [],
+        };
+
+        // Provide a top-level orderbook (UI expects market.orderbook)
+        if (data.orderbook) {
+          normalizedMarket.orderbook = data.orderbook;
+        } else if (normalizedMarket.outcomes.length > 0 && normalizedMarket.outcomes[0].orderbook) {
+          normalizedMarket.orderbook = normalizedMarket.outcomes[0].orderbook;
+        } else {
+          normalizedMarket.orderbook = { bids: [], asks: [] };
+        }
+
+        setMarket(normalizedMarket);
+        setSelectedOutcome(normalizedMarket.outcomes[0]?.id || '');
         
         // Check if market is in watchlist
         const watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');

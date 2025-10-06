@@ -24,32 +24,74 @@ export async function GET(
     let priceHistory: PricePoint[] = [];
 
     try {
-      // Attempt to fetch real price history (this endpoint might not exist)
-      const historyUrl = `${POLYMARKET_API_BASE}/prices-history`;
-      const historyParams = new URLSearchParams({
-        market: id,
-        interval: interval,
-        limit: limit,
-      });
+      // Prefer Gamma for price history if available
+      let fetched = false;
 
-      const historyResponse = await fetch(`${historyUrl}?${historyParams.toString()}`, {
-        headers: {
-          'Accept': 'application/json',
-        },
-        cache: 'no-store',
-      });
+      // 1) Try explicit Gamma price-history endpoint: /markets/:id/price-history
+      try {
+        const gammaHistoryUrl = `https://gamma-api.polymarket.com/markets/${encodeURIComponent(id)}/price-history`;
+        const resp = await fetch(`${gammaHistoryUrl}?interval=${encodeURIComponent(interval)}&limit=${encodeURIComponent(limit)}`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data)) {
+            priceHistory = data.map((p: any) => ({ timestamp: new Date(p.timestamp || p.time).getTime(), price: parseFloat(p.price || p.value || 0) }));
+            fetched = true;
+          } else if (data.data && Array.isArray(data.data)) {
+            priceHistory = data.data.map((p: any) => ({ timestamp: new Date(p.timestamp || p.time).getTime(), price: parseFloat(p.price || p.value || 0) }));
+            fetched = true;
+          }
+        }
+      } catch (e) {
+        // ignore and try next
+      }
 
-      if (historyResponse.ok) {
-        const historyData = await historyResponse.json();
-        if (historyData && Array.isArray(historyData)) {
-          priceHistory = historyData.map((point: any) => ({
-            timestamp: new Date(point.timestamp || point.time).getTime(),
-            price: parseFloat(point.price || point.value || 0),
-          }));
+      // 2) Try Gamma market endpoint and derive a series from outcomePrices
+      if (!fetched) {
+        try {
+          const gammaMarketUrl = `https://gamma-api.polymarket.com/markets/${encodeURIComponent(id)}`;
+          const resp = await fetch(gammaMarketUrl, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.outcomePrices) {
+              try {
+                const prices = typeof data.outcomePrices === 'string' ? JSON.parse(data.outcomePrices) : data.outcomePrices;
+                if (Array.isArray(prices)) {
+                  priceHistory = prices.slice(-parseInt(limit)).map((p: any, i: number) => ({ timestamp: Date.now() - ((parseInt(limit) - i) * 3600 * 1000), price: parseFloat(p || 0) }));
+                  fetched = true;
+                }
+              } catch (err) {
+                // ignore
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
         }
       }
+
+      // 3) Fallback: try CLOB prices-history endpoint
+      if (!fetched) {
+        try {
+          const historyUrl = `${POLYMARKET_API_BASE}/prices-history`;
+          const historyParams = new URLSearchParams({ market: id, interval: interval, limit: limit });
+          const historyResponse = await fetch(`${historyUrl}?${historyParams.toString()}`, { headers: { 'Accept': 'application/json' }, cache: 'no-store' });
+          if (historyResponse.ok) {
+            const historyData = await historyResponse.json();
+            if (historyData && Array.isArray(historyData)) {
+              priceHistory = historyData.map((point: any) => ({ timestamp: new Date(point.timestamp || point.time).getTime(), price: parseFloat(point.price || point.value || 0) }));
+              fetched = true;
+            }
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+
+      if (!fetched) {
+        console.log('Price history endpoints not available, will generate realistic data');
+      }
     } catch (error) {
-      console.log('Price history endpoint not available, generating realistic data');
+      console.log('Price history resolution error, generating realistic data', error);
     }
 
     // If no real data available, generate realistic price history
