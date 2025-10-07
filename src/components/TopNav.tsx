@@ -14,7 +14,7 @@ export default function TopNav({ onToggleSidebar, sidebarCollapsed }: TopNavProp
   const [activeTab, setActiveTab] = useState('Discover');
 
   return (
-  <header className="bg-primary border-b border-[color:var(--bg-secondary)] fixed top-0 left-0 right-0 z-50">
+  <header className="bg-black border-b border-[color:var(--bg-secondary)] fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between px-6 py-3">
         {/* Left side - Logo and Navigation */}
         <div className="flex items-center space-x-8">

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, TrendingUp, TrendingDown, Users, DollarSign, Clock, ExternalLink, Star } from 'lucide-react';
 import { polymarketAPI } from '@/lib/polymarket-api';
+import TopNav from '@/components/TopNav';
 
 interface Market {
   id: string;
@@ -46,6 +47,57 @@ interface Market {
   }>;
 }
 
+// Market icon mapping based on category/tags (same as DiscoverPage)
+const getMarketIcon = (market: Market) => {
+  const tags = market.tags?.map(tag => tag.toLowerCase()) || [];
+  const category = market.category?.toLowerCase() || '';
+  
+  // Use the market's actual image/icon if available
+  if (market.image) return market.image;
+  if (market.icon) return market.icon;
+  
+  // Sports icons
+  if (tags.includes('sports') || tags.includes('nfl') || tags.includes('football') || 
+      category.includes('sport') || market.name.toLowerCase().includes('nfl')) {
+    return '🏈';
+  }
+  if (tags.includes('soccer') || tags.includes('football') || market.name.toLowerCase().includes('premier league')) {
+    return '⚽';
+  }
+  if (tags.includes('basketball') || tags.includes('nba')) {
+    return '🏀';
+  }
+  
+  // Crypto icons
+  if (tags.includes('crypto') || tags.includes('bitcoin') || tags.includes('btc') || 
+      category.includes('crypto') || market.name.toLowerCase().includes('bitcoin')) {
+    return '₿';
+  }
+  if (tags.includes('ethereum') || tags.includes('eth')) {
+    return 'Ξ';
+  }
+  
+  // Tech icons
+  if (tags.includes('tech') || tags.includes('ai') || tags.includes('technology') || 
+      category.includes('tech') || market.name.toLowerCase().includes('gpt')) {
+    return '🤖';
+  }
+  
+  // Politics icons
+  if (tags.includes('politics') || tags.includes('election') || category.includes('politic')) {
+    return '🗳️';
+  }
+  
+  // Entertainment/Movies
+  if (tags.includes('entertainment') || tags.includes('movie') || tags.includes('avengers') ||
+      market.name.toLowerCase().includes('avengers') || market.name.toLowerCase().includes('movie')) {
+    return '🎬';
+  }
+  
+  // Default
+  return '📊';
+};
+
 export default function MarketDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -57,6 +109,34 @@ export default function MarketDetailsPage() {
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [chartData, setChartData] = useState<number[]>([]);
   const [loadingChart, setLoadingChart] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const handleToggleSidebar = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
+
+  // Mock order book data
+  const mockAsks = [
+    { price: 0.58, shares: 1250, total: 725 },
+    { price: 0.59, shares: 2100, total: 1239 },
+    { price: 0.60, shares: 3500, total: 2100 },
+    { price: 0.61, shares: 1800, total: 1098 },
+    { price: 0.62, shares: 2400, total: 1488 },
+    { price: 0.63, shares: 1600, total: 1008 },
+    { price: 0.64, shares: 2800, total: 1792 },
+    { price: 0.65, shares: 3200, total: 2080 },
+  ];
+
+  const mockBids = [
+    { price: 0.57, shares: 2200, total: 1254 },
+    { price: 0.56, shares: 3100, total: 1736 },
+    { price: 0.55, shares: 2800, total: 1540 },
+    { price: 0.54, shares: 1900, total: 1026 },
+    { price: 0.53, shares: 2500, total: 1325 },
+    { price: 0.52, shares: 3300, total: 1716 },
+    { price: 0.51, shares: 2100, total: 1071 },
+    { price: 0.50, shares: 4000, total: 2000 },
+  ];
 
   // Fetch chart data from API
   const fetchChartData = async (marketId: string) => {
@@ -346,98 +426,137 @@ export default function MarketDetailsPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <div className="border-b border-gray-800 bg-gray-950">
-        <div className="max-w-7xl mx-auto px-4 py-4">
+    <>
+      <TopNav 
+        onToggleSidebar={handleToggleSidebar}
+        sidebarCollapsed={sidebarCollapsed}
+      />
+      <div className="min-h-screen bg-black text-white pt-20">
+        {/* Header */}
+        <div className="border-b border-gray-800 bg-black relative z-10">
+        <div className="w-full px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold">{market.name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  <span className="text-sm text-gray-400">{market.category}</span>
-                  {market.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-1 bg-gray-800 text-xs rounded-md">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <button
-                onClick={toggleWatchlist}
-                className={`p-2 rounded-lg transition-colors ${
-                  isWatchlisted ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-gray-800 hover:bg-gray-700'
-                }`}
-              >
-                <Star className={`w-5 h-5 ${isWatchlisted ? 'fill-current' : ''}`} />
-              </button>
-              
-              <div className="flex items-center gap-2">
-                {market.closed ? (
-                  <span className="px-3 py-1 bg-red-600 text-sm rounded-full">Closed</span>
-                ) : market.active ? (
-                  <span className="px-3 py-1 bg-green-600 text-sm rounded-full">Active</span>
+              {/* Market Icon/Photo */}
+              <div className="w-12 h-12 flex items-center justify-center flex-shrink-0 text-2xl rounded-lg bg-gray-800">
+                {typeof getMarketIcon(market) === 'string' && getMarketIcon(market).startsWith('http') ? (
+                  <img 
+                    src={getMarketIcon(market)} 
+                    alt={market.name}
+                    className="w-full h-full object-cover rounded-lg"
+                  />
                 ) : (
-                  <span className="px-3 py-1 bg-gray-600 text-sm rounded-full">Inactive</span>
+                  <span>{getMarketIcon(market)}</span>
                 )}
               </div>
+              <div className="flex items-center gap-3">
+                <div>
+                  <h1 className="text-2xl font-bold">{market.name}</h1>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-sm text-gray-400">{market.category}</span>
+                    {market.tags.map((tag) => (
+                      <span key={tag} className="px-2 py-1 bg-gray-800 text-xs rounded-md">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {/* Bookmark Icon */}
+                <button
+                  onClick={toggleWatchlist}
+                  className="mt-[-5%] hover:bg-gray-800 rounded-lg transition-colors"
+                  title={isWatchlisted ? 'Remove from watchlist' : 'Add to watchlist'}
+                >
+                  <svg 
+                    className={`w-6 h-6 transition-colors ${
+                      isWatchlisted ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-gray-300'
+                    }`}
+                    fill={isWatchlisted ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            {/* Options filling the space - 3 columns */}
+            <div className="flex-1 grid grid-cols-3 gap-2 ml-8">
+              {/* Option 1 */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-black/40 border border-gray-700 hover:bg-black/60 transition-colors cursor-pointer">
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
+                <span className="text-sm text-gray-200 font-medium">Option 1</span>
+              </div>
+
+              {/* Option 2 */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-black/40 border border-gray-700 hover:bg-black/60 transition-colors cursor-pointer">
+                <div className="w-2.5 h-2.5 rounded-full bg-purple-500"></div>
+                <span className="text-sm text-gray-200 font-medium">Option 2</span>
+              </div>
+
+              {/* Option 3 */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-black/40 border border-gray-700 hover:bg-black/60 transition-colors cursor-pointer">
+                <div className="w-2.5 h-2.5 rounded-full bg-orange-500"></div>
+                <span className="text-sm text-gray-200 font-medium">Option 3</span>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Top Row: Order Book | Graph | Trading Panel */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div className="w-full">
+        {/* Top Row: Order Book | Graph | Trading Panel - Full viewport height */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2.5fr_1fr] gap-4 mb-4" style={{ height: 'calc(100vh - 140px)' }}>
           {/* Left: Order Book */}
-          <div className="bg-gray-800 rounded-xl p-6 h-[520px] overflow-auto">
-            <h3 className="text-lg font-semibold mb-4">Order Book</h3>
-            <div className="space-y-4">
+          <div className="bg-black/80 border border-gray-800 rounded-xl p-5 h-full overflow-auto backdrop-blur-sm">
+            <h3 className="text-base font-semibold mb-4 text-gray-200">Order Book</h3>
+            <div className="space-y-3">
               <div>
-                <h4 className="text-sm font-medium text-red-400 mb-2">Asks (Sell)</h4>
+                <h4 className="text-xs font-semibold text-red-400 mb-3 uppercase tracking-wider">Asks (Sell)</h4>
+                <div className="flex justify-between text-[10px] text-gray-500 font-semibold mb-2 px-2">
+                  <span>Price</span>
+                  <span>Shares</span>
+                  <span>Total</span>
+                </div>
                 <div className="space-y-1">
-                  {market.orderbook.asks.slice(0, 10).map((ask, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{(ask.price * 100).toFixed(1)}¢</span>
-                      <span className="text-gray-400">${ask.size}</span>
+                  {mockAsks.map((ask, index) => (
+                    <div key={index} className="flex justify-between text-sm bg-red-500/5 hover:bg-red-500/10 px-2 py-1.5 rounded transition-colors">
+                      <span className="text-red-400 font-semibold">{(ask.price * 100).toFixed(1)}¢</span>
+                      <span className="text-gray-400 text-xs">{ask.shares.toLocaleString()}</span>
+                      <span className="text-gray-300 text-xs">${ask.total.toLocaleString()}</span>
                     </div>
                   ))}
-                  {market.orderbook.asks.length === 0 && (
-                    <div className="text-sm text-gray-500 text-center py-2">No asks available</div>
-                  )}
                 </div>
               </div>
 
-              <div className="border-t border-gray-700 pt-4">
-                <h4 className="text-sm font-medium text-green-400 mb-2">Bids (Buy)</h4>
+              <div className="border-t border-gray-800 pt-3">
+                <h4 className="text-xs font-semibold text-green-400 mb-3 uppercase tracking-wider">Bids (Buy)</h4>
+                <div className="flex justify-between text-[10px] text-gray-500 font-semibold mb-2 px-2">
+                  <span>Price</span>
+                  <span>Shares</span>
+                  <span>Total</span>
+                </div>
                 <div className="space-y-1">
-                  {market.orderbook.bids.slice(0, 10).map((bid, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{(bid.price * 100).toFixed(1)}¢</span>
-                      <span className="text-gray-400">${bid.size}</span>
+                  {mockBids.map((bid, index) => (
+                    <div key={index} className="flex justify-between text-sm bg-green-500/5 hover:bg-green-500/10 px-2 py-1.5 rounded transition-colors">
+                      <span className="text-green-400 font-semibold">{(bid.price * 100).toFixed(1)}¢</span>
+                      <span className="text-gray-400 text-xs">{bid.shares.toLocaleString()}</span>
+                      <span className="text-gray-300 text-xs">${bid.total.toLocaleString()}</span>
                     </div>
                   ))}
-                  {market.orderbook.bids.length === 0 && (
-                    <div className="text-sm text-gray-500 text-center py-2">No bids available</div>
-                  )}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Center: Graph */}
-          <div className="bg-gray-800 rounded-xl p-6 h-[520px]">
-            <h3 className="text-lg font-semibold mb-4">Price History</h3>
-            <div className="h-[420px] relative">
+          <div className="bg-black/80 border border-gray-800 rounded-xl p-5 h-full backdrop-blur-sm flex flex-col">
+            <h3 className="text-base font-semibold mb-4 text-gray-200">Price History</h3>
+            <div className="flex-1 relative">
               {loadingChart ? (
                 <div className="flex items-center justify-center w-full h-full">
                   <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -457,183 +576,135 @@ export default function MarketDetailsPage() {
           </div>
 
           {/* Right: Trading Panel */}
-          <div className="bg-gray-800 rounded-xl p-6 h-[520px] overflow-auto">
-            {/* User Profile Header */}
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-700">
-              <div className="w-10 h-10 rounded-lg bg-gray-600 flex items-center justify-center">
-                <Users className="w-5 h-5 text-gray-300" />
+          <div className="bg-black/80 border border-gray-800 rounded-xl p-4 h-full overflow-hidden backdrop-blur-sm flex flex-col">
+            {/* Buy/Sell Tabs - No user profile header */}
+            <div className="flex items-center justify-between mb-4 border-b border-gray-800 pb-3">
+              <div className="flex gap-2">
+                <button className="py-1.5 px-4 text-white font-medium text-sm bg-transparent border border-green-500/30">
+                  Buy
+                </button>
+                <button className="py-1.5 px-4 text-gray-400 hover:text-white transition-colors text-sm font-normal bg-transparent border border-gray-700/30">
+                  Sell
+                </button>
               </div>
-              <span className="text-white font-medium">Zohran Mamdani</span>
-            </div>
-
-            {/* Buy/Sell Tabs */}
-            <div className="flex mb-6">
-              <button className="flex-1 py-2 px-4 text-blue-400 border-b-2 border-blue-400 font-medium">
-                Buy
-              </button>
-              <button className="flex-1 py-2 px-4 text-gray-400 hover:text-white transition-colors">
-                Sell
-              </button>
-              <div className="flex items-center ml-4">
-                <span className="text-gray-400 text-sm">Market</span>
-                <svg className="w-4 h-4 ml-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <div className="flex items-center gap-1 px-3 py-1.5 bg-transparent border border-gray-800">
+                <span className="text-gray-300 text-sm">Market</span>
+                <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
               </div>
             </div>
 
-            {/* Yes/No Outcome Buttons */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* Yes/No Outcome Buttons - Transparent with hover effect */}
+            <div className="grid grid-cols-2 gap-2 mb-4">
               <button 
                 onClick={() => setSelectedOutcome('yes')}
-                className={`p-3 rounded-lg text-white font-semibold transition-colors ${
+                className={`group relative p-2.5 font-semibold transition-all overflow-hidden ${
                   selectedOutcome === 'yes' 
-                    ? 'bg-green-600' 
-                    : 'bg-green-600/80 hover:bg-green-600'
+                    ? 'bg-green-600/20 ring-1 ring-green-500 text-green-400' 
+                    : 'bg-transparent border border-green-600/30 text-green-400 hover:bg-green-600/10'
                 }`}
               >
-                <div>Yes</div>
-                <div className="text-lg font-bold">
+                <div className="text-xs opacity-90">Yes</div>
+                <div className="text-base font-bold opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center bg-green-600/20 transition-opacity duration-200">
                   {formatPrice(market.currentPrice || 0.5)}
                 </div>
               </button>
               
               <button 
                 onClick={() => setSelectedOutcome('no')}
-                className={`p-3 rounded-lg text-white font-semibold transition-colors ${
+                className={`group relative p-2.5 font-semibold transition-all overflow-hidden ${
                   selectedOutcome === 'no' 
-                    ? 'bg-red-600' 
-                    : 'bg-red-600/80 hover:bg-red-600'
+                    ? 'bg-red-600/20 ring-1 ring-red-500 text-red-400' 
+                    : 'bg-transparent border border-red-600/30 text-red-400 hover:bg-red-600/10'
                 }`}
               >
-                <div>No</div>
-                <div className="text-lg font-bold">
+                <div className="text-sm opacity-90">No</div>
+                <div className="text-lg font-bold opacity-0 group-hover:opacity-100 absolute inset-0 flex items-center justify-center bg-red-600/20 transition-opacity duration-200">
                   {formatPrice(1 - (market.currentPrice || 0.5))}
                 </div>
               </button>
             </div>
 
-            {/* Half/Max Buttons */}
-            <div className="flex gap-2 mb-4">
-              <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors">
-                Half
-              </button>
-              <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors">
-                Max
-              </button>
-            </div>
+
 
             {/* Amount Input */}
             <div className="mb-4">
-              <label className="block text-gray-400 text-sm mb-2">Enter Amount</label>
-              <div className="flex items-center gap-2 mb-3">
-                <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors">
-                  +$10
-                </button>
-                <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors">
-                  +$25
-                </button>
-                <button className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg text-sm transition-colors">
-                  +$50
-                </button>
-                <button className="p-2 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                  </svg>
-                </button>
-              </div>
+              <label className="block text-gray-400 text-sm font-medium mb-2">No. of Shares</label>
               <input
                 type="number"
                 value={betAmount}
                 onChange={(e) => setBetAmount(e.target.value)}
                 min={market.minBetAmount}
                 step="1"
-                className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
-                placeholder="0.00"
+                className="w-full p-3 bg-transparent border border-gray-800 focus:outline-none focus:ring-1 focus:ring-green-500 text-white text-base placeholder:text-gray-600"
+                placeholder="$800"
               />
+              <div className="flex items-center gap-2 mt-2">
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 text-sm transition-colors border border-gray-800">
+                  +$10
+                </button>
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 text-sm transition-colors border border-gray-800">
+                  +$25
+                </button>
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 text-sm transition-colors border border-gray-800">
+                  +$50
+                </button>
+              </div>
             </div>
 
-            {/* Cash and Minimum Info */}
-            <div className="flex justify-between items-center text-sm text-gray-400 mb-4">
-              <span>Cash: $0.00</span>
-              <span>Minimum: $1.00</span>
+            {/* Expiration Options */}
+            <div className="mb-4">
+              <label className="block text-gray-400 text-sm font-medium mb-2">Expiration</label>
+              <div className="flex gap-2">
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-300 text-sm transition-colors border border-gray-800">
+                  None
+                </button>
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 border border-gray-800 text-sm transition-colors">
+                  EOD
+                </button>
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 border border-gray-800 text-sm transition-colors">
+                  EOM
+                </button>
+                <button className="px-3 py-1.5 bg-transparent hover:bg-gray-700/40 text-gray-400 border border-gray-800 text-sm transition-colors">
+                  Custom
+                </button>
+              </div>
             </div>
 
-            {/* Take Profit / Stop Loss */}
-            <div className="flex items-center justify-between mb-6">
-              <span className="text-gray-400 text-sm">Take Profit / Stop Loss</span>
-              <div className="w-5 h-5 border border-gray-600 rounded bg-gray-700"></div>
+            {/* Price and Total Info */}
+            <div className="space-y-2 mb-4 pb-4 border-b border-gray-800 flex-shrink-0">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">Price</span>
+                <span className="text-white font-semibold">$34</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">Total</span>
+                <span className="text-white font-semibold">$0</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-gray-500">Potential return</span>
+                <span className="text-green-400 font-semibold">$0.00(0%)</span>
+              </div>
             </div>
 
-            {/* Connect Wallet Button */}
+            {/* Trade Button */}
             <button
               disabled={market.closed}
-              className="w-full py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-semibold text-white transition-colors"
+              className="w-full py-3 bg-transparent hover:bg-gray-700/40 disabled:bg-gray-900 disabled:cursor-not-allowed font-semibold text-white text-base transition-colors border border-gray-700 mt-auto"
             >
-              {market.closed ? 'Market Closed' : 'Connect Wallet to Trade'}
+              {market.closed ? 'Market Closed' : 'Trade'}
             </button>
           </div>
         </div>
 
         {/* Below: Everything Else */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Price Overview */}
-          <div className="bg-gray-800 rounded-xl p-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-green-600 hover:bg-green-700 rounded-lg p-4 text-center cursor-pointer transition-colors">
-                <div className="text-white font-semibold text-lg mb-1">Yes</div>
-                <div className="text-white text-2xl font-bold">
-                  {formatPrice(market.currentPrice || 0.5)}
-                </div>
-              </div>
-              
-              <div className="bg-red-600 hover:bg-red-700 rounded-lg p-4 text-center cursor-pointer transition-colors">
-                <div className="text-white font-semibold text-lg mb-1">No</div>
-                <div className="text-white text-2xl font-bold">
-                  {formatPrice(1 - (market.currentPrice || 0.5))}
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex items-center justify-center mt-4">
-              <div className={`flex items-center gap-1 text-sm ${
-                priceChange >= 0 ? 'text-green-400' : 'text-red-400'
-              }`}>
-                {priceChange >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                {Math.abs(priceChange).toFixed(2)}% 24h
-              </div>
-            </div>
-          </div>
+         
 
           {/* Market Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-gray-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                <span className="text-sm text-gray-400">24h Volume</span>
-              </div>
-              <div className="text-xl font-bold">{formatCurrency(market.volume24h)}</div>
-            </div>
-            
-            <div className="bg-gray-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-blue-400" />
-                <span className="text-sm text-gray-400">Liquidity</span>
-              </div>
-              <div className="text-xl font-bold">{formatCurrency(market.liquidity)}</div>
-            </div>
-            
-            <div className="bg-gray-800 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-purple-400" />
-                <span className="text-sm text-gray-400">Ends</span>
-              </div>
-              <div className="text-sm font-medium">
-                {new Date(market.endDate).toLocaleDateString()}
-              </div>
-            </div>
-          </div>
-
+          
           {/* Description */}
           <div className="bg-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">About This Market</h3>
@@ -671,5 +742,6 @@ export default function MarketDetailsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
