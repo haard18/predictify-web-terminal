@@ -379,7 +379,7 @@ export default function LandingPage() {
 
           {/* Subtext */}
           <p className="text-lg md:text-xl text-[#7d8590] max-w-2xl mx-auto mb-8">
-            Trade faster and smarter with our secure AI bots. Maximize your investments with
+            Trade faster and smarter with our secure Telegram bot. Maximize your investments with
             real-time insights and automation.
           </p>
 

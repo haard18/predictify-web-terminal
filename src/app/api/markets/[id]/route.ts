@@ -18,8 +18,80 @@ export async function GET(
   try {
     console.log('Fetching market details for ID:', marketId);
 
-    // Prefer Gamma for market metadata (question, description, outcomes)
+    // First, try to get market data from our main markets API (which has working mock data)
     let market: any = null;
+    try {
+      const marketsUrl = new URL('/api/markets', request.url);
+      const marketsResponse = await fetch(marketsUrl.toString(), {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        cache: 'no-store',
+      });
+      
+      if (marketsResponse.ok) {
+        const marketsData = await marketsResponse.json();
+        const foundMarket = marketsData.markets?.find((m: any) => m.id === marketId);
+        
+        if (foundMarket) {
+          console.log('Found market in main markets API:', foundMarket.name);
+          // Transform the market data to match the individual market API format
+          const transformedMarket = {
+            id: foundMarket.id,
+            name: foundMarket.name,
+            description: foundMarket.description,
+            category: foundMarket.category,
+            image: foundMarket.image,
+            icon: foundMarket.icon,
+            endDate: foundMarket.endDate,
+            active: foundMarket.active,
+            closed: foundMarket.closed,
+            tags: foundMarket.tags || [],
+            outcomes: [
+              { id: '1', label: 'Yes', price: foundMarket.currentPrice, orderbook: null },
+              { id: '2', label: 'No', price: 1 - foundMarket.currentPrice, orderbook: null },
+            ],
+            currentPrice: foundMarket.currentPrice,
+            volume24h: foundMarket.volume24h,
+            liquidity: foundMarket.liquidity,
+            priceHistory: [] as any[], // Generate below
+            recentTrades: [] as any[], // Generate below
+            orderbook: { bids: [], asks: [] },
+            fetchedAt: new Date().toISOString(),
+          };
+          
+          // Generate price history based on current price
+          const generatePriceHistory = (base: number, days = 30) => {
+            const arr: any[] = [];
+            for (let i = days; i >= 0; i--) {
+              const d = new Date();
+              d.setDate(d.getDate() - i);
+              const vol = Math.max(0.01, Math.min(0.99, base + (Math.random() - 0.5) * 0.12));
+              arr.push({ timestamp: d.toISOString(), price: parseFloat(vol.toFixed(4)), volume: Math.floor(Math.random() * 1000) });
+            }
+            return arr;
+          };
+          
+          transformedMarket.priceHistory = generatePriceHistory(foundMarket.currentPrice);
+          transformedMarket.recentTrades = [
+            { timestamp: new Date().toISOString(), price: foundMarket.currentPrice, size: 500, side: 'buy' },
+            { timestamp: new Date(Date.now() - 60000).toISOString(), price: foundMarket.currentPrice * 0.98, size: 300, side: 'sell' },
+          ];
+          
+          return NextResponse.json(transformedMarket, {
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to fetch from main markets API, falling back to external APIs');
+    }
+
+    // Fallback to external APIs if market not found in main API
+    // Prefer Gamma for market metadata (question, description, outcomes)
     try {
       const gammaUrl = `${POLY_GAMMA}/markets/${encodeURIComponent(marketId)}`;
       market = await fetchJson(gammaUrl, { headers: { Accept: 'application/json' } });
@@ -133,6 +205,8 @@ export async function GET(
       minBetAmount: market.minimum_order_size || market.min_order_size || null,
       minTickSize: market.minimum_tick_size || market.min_tick_size || null,
       outcomes,
+      // Add currentPrice for consistency with DiscoverPage
+      currentPrice: outcomes[0]?.price ?? basePrice,
       volume24h: parseFloat(market.volume || market.volume24h || '0') || 0,
       liquidity: parseFloat(market.liquidity || market.liquidityNum || '0') || 0,
       priceHistory: market.price_history || generatePriceHistory(basePrice, 30),
@@ -159,6 +233,8 @@ export async function GET(
         { id: '1', label: 'Yes', price: 0.65, orderbook: null },
         { id: '2', label: 'No', price: 0.35, orderbook: null },
       ],
+      // Add currentPrice for consistency with DiscoverPage
+      currentPrice: 0.65,
       volume24h: 0,
       liquidity: 0,
       priceHistory: [],
